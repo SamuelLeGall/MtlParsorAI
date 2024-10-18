@@ -7,13 +7,9 @@ const configUrlSourceWebsite = {
   chapterNumber: 96,
 };
 
-function getSourceWebsiteConfig(codeSource) {
+export function getSourceWebsiteConfig(codeSource) {
   switch (codeSource) {
     case "WTR_LAB":
       return configUrlSourceWebsite;
   }
 }
-
-module.exports = {
-  getSourceWebsiteConfig,
-};

@@ -1,25 +1,30 @@
-var createError = require("http-errors");
-var express = require("express");
-var path = require("path");
-var cookieParser = require("cookie-parser");
-var logger = require("morgan");
-const livereload = require("livereload");
-const connectLivereload = require("connect-livereload");
-const hbs = require("hbs");
+import createError from "http-errors";
+import express from "express";
+import cookieParser from "cookie-parser";
+import logger from "morgan";
+import { createServer } from "livereload";
+import connectLivereload from "connect-livereload";
+import hbs from "hbs";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
 
-var indexRouter = require("./routes/index");
-var usersRouter = require("./routes/users");
+import indexRouter from "./routes/index.js";
 
 // Create a livereload server
-const liveReloadServer = livereload.createServer();
+const liveReloadServer = createServer();
 // Watch for changes in views and public directories
-liveReloadServer.watch(path.join(__dirname, "views"));
-liveReloadServer.watch(path.join(__dirname, "public"));
+
+// Get __filename and __dirname in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+liveReloadServer.watch(join(__dirname, "views"));
+liveReloadServer.watch(join(__dirname, "public"));
 
 var app = express();
 
 // view engine setup
-app.set("views", path.join(__dirname, "views"));
+app.set("views", join(__dirname, "views"));
 app.set("view engine", "hbs");
 
 hbs.registerHelper("json", function (context) {
@@ -34,11 +39,10 @@ app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(join(__dirname, "public")));
 
 // Routes
 app.use("/", indexRouter);
-app.use("/users", usersRouter);
 
 // Catch 404 and forward to error handler
 app.use(function (req, res, next) {
@@ -62,4 +66,4 @@ liveReloadServer.server.once("connection", () => {
   }, 100);
 });
 
-module.exports = app;
+export default app;

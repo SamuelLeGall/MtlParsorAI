@@ -1,9 +1,10 @@
 {
   "name": "myexpressapp",
   "version": "0.0.0",
+  "type": "module",
   "private": true,
   "scripts": {
-    "dev": "nodemon ./bin/www --ext js,mjs,cjs,json,hbs"
+    "dev": "nodemon ./bin/www --ext js,ts,mjs,cjs,json,hbs,css"
   },
   "dependencies": {
     "axios": "^1.7.7",
