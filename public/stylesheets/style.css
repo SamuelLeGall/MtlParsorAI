@@ -8,6 +8,53 @@ body {
 
 } */
 
+button {
+  align-items: center;
+  appearance: none;
+  background-color: #cfc8c8;
+  border-radius: 12px;
+  border-style: none;
+  box-sizing: border-box;
+  color: #2b2d2f;
+  cursor: pointer;
+  display: inline-flex;
+  fill: currentcolor;
+  font-family: "Google Sans", Roboto, Arial, sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  height: 24px;
+  justify-content: center;
+  letter-spacing: .25px;
+  line-height: normal;
+  max-width: 100%;
+  overflow: visible;
+  padding: 2px 12px;
+  position: relative;
+  text-align: center;
+  text-transform: none;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  width: auto;
+  will-change: transform, opacity;
+  z-index: 0;
+}
+
+button:hover {
+  background: #a2a8b2;
+  color: #124392;
+}
+
+button:active {
+  /* box-shadow: 0 4px 4px 0 rgb(60 64 67 / 30%), 0 8px 12px 6px rgb(60 64 67 / 15%); */
+  outline: none;
+}
+
+button:focus {
+  outline: none;
+  border: 2px solid #4285f4;
+}
+
 a {
   color: #00B7FF;
 }
