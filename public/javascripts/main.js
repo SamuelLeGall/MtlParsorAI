@@ -1,31 +1,28 @@
 import { fetchCachedChapter, addChapterToCache } from "./cache.js";
 document.addEventListener("DOMContentLoaded", () => {
   window.loadChapter = async function loadChapter() {
-    const config = {
-      sourceSiteCode: "WTR_LAB",
-      serieCode: 4635,
-      serieBaseUrl:
-        "https://wtr-lab.com/en/serie-4635/start-with-planetary-governor",
-      chapterFragment: "/chapter-",
-      chapterNumber: 96,
-    };
-
     try {
       document.getElementById("chapter-content").innerHTML =
         "<p>loading...</p>";
 
+      // configUrlSourceWebsite is set in index.hbs using data from the back
       const chapterStore = fetchCachedChapter(
-        config.sourceSiteCode,
-        config.serieCode,
-        config.chapterNumber
+        configUrlSourceWebsite.sourceSiteCode,
+        configUrlSourceWebsite.serieCode,
+        configUrlSourceWebsite.chapterNumber
       );
+
       // chapter in the store, no need to call the api again
       if (chapterStore) {
         document.getElementById("chapter-content").innerHTML =
-          chapterStore.data.content; // Update the chapter content
+          chapterStore.data; // Update the chapter content
         return;
       }
 
+      const url =
+        configUrlSourceWebsite.serieBaseUrl +
+        configUrlSourceWebsite.chapterFragment +
+        configUrlSourceWebsite.chapterNumber;
       const response = await fetch("/load", {
         method: "POST",
         headers: {
@@ -42,7 +39,11 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("chapter-content").innerHTML = chapterHtml; // Update the chapter content
 
       // we save the response in the store
-      addChapterToCache(config.sourceSiteCode, config, chapterHtml);
+      addChapterToCache(
+        configUrlSourceWebsite.sourceSiteCode,
+        configUrlSourceWebsite,
+        chapterHtml
+      );
     } catch (error) {
       console.error("There was a problem with the fetch operation:", error);
     }

@@ -1,18 +1,6 @@
 const store = {
-  WTR_LAB: [
-    {
-      urlData: {
-        serieCode: 4635,
-        serieBaseUrl:
-          "https://wtr-lab.com/en/serie-4635/start-with-planetary-governor",
-        chapterFragment: "/chapter-",
-        chapterNumber: 96,
-      },
-      data: null,
-    },
-  ],
+  WTR_LAB: [],
 }; // Cache object to store chapters by URL
-let currentChapterUrl = null; // Store the currently loaded chapter URL
 
 function fetchCachedChapter(sourceSiteCode, serieCode, chapterNumber) {
   const sourceSiteCache = store[sourceSiteCode];
