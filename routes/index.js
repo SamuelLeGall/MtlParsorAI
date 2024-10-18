@@ -138,6 +138,7 @@ function splitTextIntoChunks(text, maxChunkSize, overlapSize) {
 
   return chunks;
 }
+
 async function makeAPICall(messages) {
   const openai = new OpenAI({
     apiKey: SECRET_OPENAI_KEY,
@@ -149,7 +150,7 @@ async function makeAPICall(messages) {
     return "";
   }
 
-  //we make the api call
+  // We make the API call
   const completion = await openai.chat.completions.create({
     model: "gpt-4o-mini",
     messages,
@@ -161,6 +162,7 @@ async function makeAPICall(messages) {
 
   return completion.choices[0].message.content;
 }
+
 async function processChunk(chunk, context) {
   const { combinedResponse, previousChapterSummary, globalContext } = context;
 
@@ -170,18 +172,18 @@ async function processChunk(chunk, context) {
   if (globalContext) {
     messages.push({
       role: "user",
-      content: "Here is the recap of main event for context : " + globalContext,
+      content: "Here is the recap of main event for context: " + globalContext,
     });
   }
   if (previousChapterSummary) {
     messages.push({
       role: "user",
-      content: "Here is the recap of last chapter : " + previousChapterSummary,
+      content: "Here is the recap of last chapter: " + previousChapterSummary,
     });
   }
 
   // Include the combined response from previous chunks for context
-  if (i > 0) {
+  if (combinedResponse !== "") {
     messages.push({ role: "user", content: combinedResponse });
   }
 
@@ -190,6 +192,7 @@ async function processChunk(chunk, context) {
 
   return await makeAPICall(messages);
 }
+
 const summaries = {
   lastChapterSummary: null,
   currentChapterSummary: null,
@@ -202,6 +205,7 @@ function updateSummaries() {
   summaries.lastChapterSummary = summaries.currentChapterSummary;
   summaries.currentChapterSummary = null;
 }
+
 async function summarizeCurrentChapter(
   combinedResponse,
   currentChapterSummaryMaxSize
@@ -218,17 +222,20 @@ async function summarizeCurrentChapter(
 }
 
 // Function to manage the global context size
-function manageGlobalContext() {
-  const tokenCount = countTokens(globalContext); // Count tokens in the global context
+async function manageGlobalContext(globalContextSummaryMaxSize) {
+  const tokenCount = countTokens(summaries.globalContext); // Count tokens in the global context
 
-  // If the global context exceeds the token limit, trim it down
+  // If the global context exceeds the token limit, summarize it
   if (tokenCount > globalContextTokenLimit) {
-    // Optional: You could choose to summarize instead of trimming directly
-    // Here we are simply keeping the last N tokens
-    const tokens = globalContext.split(" ");
-    globalContext = tokens.slice(-50).join(" "); // Keep only the last 50 tokens
-    // Alternatively, summarize the global context if needed
-    // summarizeGlobalContext();
+    const messages = [
+      { role: "system", content: "You are a helpful assistant." },
+      {
+        role: "user",
+        content: `Please summarize the following context in under ${globalContextSummaryMaxSize} tokens. Focus on preserving key actions and the main characters' personalities and motivations. Recent events should take precedence, while earlier actions can be summarized or omitted if they are less significant to the current narrative. Ensure essential character traits and motivations are retained. There is no need to reach the token limit if all important actions are already accounted for: ${summaries.globalContext}`,
+      },
+    ];
+
+    summaries.globalContext = await makeAPICall(messages); // Update global context with a summary
   }
 }
 
@@ -255,7 +262,8 @@ router.get("/", async function (req, res, next) {
   */
   const maxChunkSize = 1200; // Maximum size for each chunk
   const overlapSize = 200; // Number of overlapping tokens
-  const currentChapterSummaryMaxSize = 500; // Number of overlapping tokens
+  const currentChapterSummaryMaxSize = 500; // Number of tokens for chapter summary
+  const globalContextSummaryMaxSize = 1500; // Number of tokens for summary of the whole story
 
   // we update the summaries
   updateSummaries();
@@ -285,14 +293,14 @@ router.get("/", async function (req, res, next) {
   }
 
   try {
-    // recap the current chapter to be used as context in next chapter
+    // recap the current chapter to be used as context in the next chapter
     summaries.currentChapterSummary = await summarizeCurrentChapter(
       context.combinedResponse,
       currentChapterSummaryMaxSize
     );
 
     // Update the global context with the new summary
-    globalContext += summaries.currentChapterSummary + " ";
+    summaries.globalContext += summaries.currentChapterSummary + " ";
   } catch (e) {
     return res.render("index", {
       title: "Express",
@@ -302,14 +310,14 @@ router.get("/", async function (req, res, next) {
   }
 
   // Clean up the global context if it exceeds the token limit
-  manageGlobalContext();
+  await manageGlobalContext(globalContextSummaryMaxSize);
 
   // return the processed chapter
   res.render("index", {
     title: "Express",
     dataAI: context.combinedResponse.trim(),
     data: "this is a test",
-    lastChapterSummary,
+    lastChapterSummary: summaries.lastChapterSummary,
   });
 });
 
