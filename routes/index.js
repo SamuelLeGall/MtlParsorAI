@@ -118,22 +118,38 @@ In fact, she and the dozen or so people under her can't handle even the tasks of
 But fortunately, the army will come to help her.`;
 
 // Function to split text into chunks
-function splitTextIntoChunks(text, maxChunkSize, overlapSize) {
-  const words = text.split(" ");
+function splitTextIntoChunks(
+  text,
+  maxChunkSize,
+  overlapSize,
+  maxSentenceLength
+) {
+  const sentences = text.split(/(?<=[.!?])\s+/); // Split by sentence-ending punctuation
   const chunks = [];
   let currentChunk = [];
 
-  for (let i = 0; i < words.length; i++) {
-    currentChunk.push(words[i]);
+  for (let i = 0; i < sentences.length; i++) {
+    let sentence = sentences[i].trim();
+
+    // If the sentence is too long, break it down into smaller parts
+    while (sentence.length > maxSentenceLength) {
+      const part = sentence.slice(0, maxSentenceLength);
+      chunks.push([...currentChunk, part].join(" ")); // Add current chunk + part
+      sentence = sentence.slice(maxSentenceLength); // Remove the processed part
+      currentChunk = []; // Reset current chunk for the next part
+    }
+
+    // Add the sentence to the current chunk
+    currentChunk.push(sentence);
+
     // Check if the current chunk exceeds the maximum size
     // currentChunk.join(" ") make it so we check the number of characters not the number of element of the array
     if (currentChunk.join(" ").length >= maxChunkSize) {
       // Add the current chunk to the chunks array
       chunks.push(currentChunk.join(" "));
 
-      // we divide by 4 because overlapSize is a number of caracters while currentChunk is a number of word and
-      // a word is around 4 caracters in average
-      currentChunk = currentChunk.slice(-(overlapSize / 5));
+      //we keep the overlapSize last sentences
+      currentChunk = currentChunk.slice(-overlapSize);
       currentChunk.unshift("<PREV_CHUNCK_OVERLAP>");
       currentChunk.push("</PREV_CHUNCK_OVERLAP>");
     }
@@ -153,7 +169,7 @@ async function makeAPICall(messages) {
   });
 
   // if we want to not make the api call (for dev)
-  const allowAPICall = false;
+  const allowAPICall = true;
   if (!allowAPICall) {
     return "";
   }
@@ -202,15 +218,26 @@ async function processChunk(chunk, context) {
     messages.push({
       role: "user",
       content:
-        "Here is the previous part of the current chapter chunk that you already reworked (for context again). be careful to  " +
+        "Here is the previous part of the current chapter chunk that you already reworked (for context again)." +
         combinedResponse,
     });
   }
   // Include the current chunk
   messages.push({
     role: "user",
-    content: `Please review the following chapter chunck and rewrite the sentences where necessary to improve readability and clarity. Focus on fixing grammatical errors, awkward phrasing, or sentence structure issues, but try to preserve the author's original style and tone. Do not significantly alter the meaning of the sentences or rewrite them in a completely different way unless absolutely necessary. The goal is to retain the author's voice while making the text smoother and more polished. Provide only the revised version of the chapter, without any additional commentary. Format the output as valid HTML, with each paragraph enclosed in <p> tags. For all spoken dialogue, enclose the quoted parts inside <span> tags. Do not add any explanations, introductions, or conclusions before or after the text. Provide only the revised version of the chapter in the requested HTML format. Do not translate the last sentence of the chunck if it's incomplete. don't rewrite and dont include the part of the text inside <PREV_CHUNCK_OVERLAP> tag except if the text inside is not in your response for the previous chunck. if the sentenceThe chapter chunck : ${chunk}`,
+    content: `Please review the following chapter chunk and rewrite the sentences where necessary to improve readability and clarity. Focus on fixing grammatical errors, awkward phrasing, or sentence structure issues while preserving the author's original style and tone. 
+
+  **Instructions:**
+  - Provide only the revised version of the chapter, formatted as valid HTML with each paragraph enclosed in <p> tags.
+  - For spoken dialogue, enclose the quoted parts inside <span> tags.
+  - Do not add any explanations, introductions, or conclusions before or after the text.
+  - Ignore any text within <PREV_CHUNCK_OVERLAP> tags.
+  - Do not rewrite or include the last incomplete sentence of the chunk if it exists. 
+  - If the content inside <PREV_CHUNCK_OVERLAP> is not included in the previous chunk, you may use it for context only. 
+
+  The chapter chunk: ${chunk}`,
   });
+
   let content = await makeAPICall(messages);
   const cleanedContent = content.replace(/```html|```/g, "");
   return cleanedContent;
@@ -282,9 +309,10 @@ router.get("/", async function (req, res, next) {
     information loss and helping the model maintain a coherent understanding of the narrative.
   */
   const maxChunkSize = 1200 * 4; // Maximum size for each chunk (*4 because we work with characters not token)
-  const overlapSize = 200 * 4; // Number of overlapping tokens (*4 because we work with characters not token)
+  const overlapSize = 4; // Number of overlapping sentences
   const currentChapterSummaryMaxSize = 500; // Number of tokens for chapter summary
   const globalContextSummaryMaxSize = 1500; // Number of tokens for summary of the whole story
+  const maxSentenceLength = 250; // 250 characters max per sentence
 
   // we update the summaries
   updateSummaries();
@@ -297,12 +325,16 @@ router.get("/", async function (req, res, next) {
   };
 
   // Split the text into chunks
-  const chunks = splitTextIntoChunks(basetext, maxChunkSize, overlapSize);
+  const chunks = splitTextIntoChunks(
+    basetext,
+    maxChunkSize,
+    overlapSize,
+    maxSentenceLength
+  );
 
   // Process each chunk
   for (const chunk of chunks) {
     try {
-      console.log(100, chunk);
       const content = await processChunk(chunk, context);
       context.combinedResponse += content; // Accumulate the responses
     } catch (e) {
@@ -314,32 +346,32 @@ router.get("/", async function (req, res, next) {
     }
   }
 
-  try {
-    // recap the current chapter to be used as context in the next chapter
-    summaries.currentChapterSummary = await summarizeCurrentChapter(
-      context.combinedResponse,
-      currentChapterSummaryMaxSize
-    );
-  } catch (e) {
-    return res.render("index", {
-      title: "Express",
-      errorAI: e.message,
-      data: "Error summarizing chapter.",
-    });
-  }
+  // try {
+  //   // recap the current chapter to be used as context in the next chapter
+  //   summaries.currentChapterSummary = await summarizeCurrentChapter(
+  //     context.combinedResponse,
+  //     currentChapterSummaryMaxSize
+  //   );
+  // } catch (e) {
+  //   return res.render("index", {
+  //     title: "Express",
+  //     errorAI: e.message,
+  //     data: "Error summarizing chapter.",
+  //   });
+  // }
 
-  // update the global context and integrate the currentChapterSummary
-  summaries.globalContext = await manageGlobalContext(
-    globalContextSummaryMaxSize,
-    summaries
-  );
+  // // update the global context and integrate the currentChapterSummary
+  // summaries.globalContext = await manageGlobalContext(
+  //   globalContextSummaryMaxSize,
+  //   summaries
+  // );
 
   // return the processed chapter
   res.render("index", {
     title: "Express",
     dataAI: context.combinedResponse.trim(),
     data: "this is a test",
-    lastChapterSummary: summaries.lastChapterSummary,
+    // lastChapterSummary: summaries.lastChapterSummary,
   });
 });
 
