@@ -4,6 +4,8 @@ document.addEventListener("DOMContentLoaded", () => {
       "https://wtr-lab.com/en/serie-4635/start-with-planetary-governor/chapter-96"; // Replace with your actual URL or get it dynamically if needed
 
     try {
+      document.getElementById("chapter-content").innerHTML =
+        "<p>loading...</p>";
       const response = await fetch("/load", {
         method: "POST",
         headers: {

@@ -230,8 +230,7 @@ async function fetchChapterText(url, codeWebsiteSource) {
 router.get("/", async function (req, res, next) {
   // return the processed chapter
   res.render("index", {
-    title: "Express",
-    data: "this is static text",
+    title: "MtlParsorAI",
   });
 });
 router.post("/load", async function (req, res, next) {
