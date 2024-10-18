@@ -222,28 +222,25 @@ async function summarizeCurrentChapter(
 }
 
 // Function to manage the global context size
-async function manageGlobalContext(globalContextSummaryMaxSize) {
-  const tokenCount = countTokens(summaries.globalContext); // Count tokens in the global context
+async function manageGlobalContext(
+  globalContextSummaryMaxSize,
+  summariesParam
+) {
+  const messages = [
+    { role: "system", content: "You are a helpful assistant." },
+    {
+      role: "user",
+      content:
+        "Here is the recap of the last chapter: " +
+        summariesParam.lastChapterSummary,
+    },
+    {
+      role: "user",
+      content: `Please summarize the following context in under ${globalContextSummaryMaxSize} tokens. Focus on preserving key actions and the main characters' personalities and motivations. Recent events should take precedence, while earlier actions can be summarized or omitted if they are less significant to the current narrative. Ensure essential character traits and motivations are retained. There is no need to reach the token limit if all important actions are already accounted for: ${summariesParam.globalContext}`,
+    },
+  ];
 
-  // If the global context exceeds the token limit, summarize it
-  if (tokenCount > globalContextTokenLimit) {
-    const messages = [
-      { role: "system", content: "You are a helpful assistant." },
-      {
-        role: "user",
-        content: `Please summarize the following context in under ${globalContextSummaryMaxSize} tokens. Focus on preserving key actions and the main characters' personalities and motivations. Recent events should take precedence, while earlier actions can be summarized or omitted if they are less significant to the current narrative. Ensure essential character traits and motivations are retained. There is no need to reach the token limit if all important actions are already accounted for: ${summaries.globalContext}`,
-      },
-    ];
-
-    summaries.globalContext = await makeAPICall(messages); // Update global context with a summary
-  }
-}
-
-// Function to count tokens in a string
-function countTokens(text) {
-  // A simple approximation: roughly 4 tokens per word (could vary)
-  const words = text.split(" ");
-  return Math.ceil(words.length / 0.75); // Adjust as needed
+  return await makeAPICall(messages); // Update global context with a summary
 }
 
 /* GET home page. */
@@ -298,9 +295,6 @@ router.get("/", async function (req, res, next) {
       context.combinedResponse,
       currentChapterSummaryMaxSize
     );
-
-    // Update the global context with the new summary
-    summaries.globalContext += summaries.currentChapterSummary + " ";
   } catch (e) {
     return res.render("index", {
       title: "Express",
@@ -309,8 +303,11 @@ router.get("/", async function (req, res, next) {
     });
   }
 
-  // Clean up the global context if it exceeds the token limit
-  await manageGlobalContext(globalContextSummaryMaxSize);
+  // update the global context and integrate the currentChapterSummary
+  summaries.globalContext = await manageGlobalContext(
+    globalContextSummaryMaxSize,
+    summaries
+  );
 
   // return the processed chapter
   res.render("index", {
