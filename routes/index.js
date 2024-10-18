@@ -169,7 +169,7 @@ async function makeAPICall(messages) {
   });
 
   // if we want to not make the api call (for dev)
-  const allowAPICall = true;
+  const allowAPICall = false;
   if (!allowAPICall) {
     return "";
   }
@@ -346,32 +346,32 @@ router.get("/", async function (req, res, next) {
     }
   }
 
-  // try {
-  //   // recap the current chapter to be used as context in the next chapter
-  //   summaries.currentChapterSummary = await summarizeCurrentChapter(
-  //     context.combinedResponse,
-  //     currentChapterSummaryMaxSize
-  //   );
-  // } catch (e) {
-  //   return res.render("index", {
-  //     title: "Express",
-  //     errorAI: e.message,
-  //     data: "Error summarizing chapter.",
-  //   });
-  // }
+  try {
+    // recap the current chapter to be used as context in the next chapter
+    summaries.currentChapterSummary = await summarizeCurrentChapter(
+      context.combinedResponse,
+      currentChapterSummaryMaxSize
+    );
+  } catch (e) {
+    return res.render("index", {
+      title: "Express",
+      errorAI: e.message,
+      data: "Error summarizing chapter.",
+    });
+  }
 
-  // // update the global context and integrate the currentChapterSummary
-  // summaries.globalContext = await manageGlobalContext(
-  //   globalContextSummaryMaxSize,
-  //   summaries
-  // );
+  // update the global context and integrate the currentChapterSummary
+  summaries.globalContext = await manageGlobalContext(
+    globalContextSummaryMaxSize,
+    summaries
+  );
 
   // return the processed chapter
   res.render("index", {
     title: "Express",
     dataAI: context.combinedResponse.trim(),
     data: "this is a test",
-    // lastChapterSummary: summaries.lastChapterSummary,
+    lastChapterSummary: summaries.lastChapterSummary,
   });
 });
 
