@@ -2,6 +2,9 @@ var express = require("express");
 var router = express.Router();
 var OpenAI = require("openai");
 const { SECRET_OPENAI_KEY } = require("../openaiSecret.json");
+const currentGlobalContext = `In a harsh, post-apocalyptic world, Gu Hang rises to power as the new governor of a planet ravaged by monsters and energy storms. The previous governors faced grim fates, executed for their inability to meet the council’s tax demands within two years. Despite the council’s political maneuvering, Gu Hang takes bold steps to establish control, moving his camp outside the city, which is largely disregarded by the council.
+
+With the support of a cruiser in orbit acting as a nuclear deterrent, he strategically eliminates multiple bandit groups and faces cultist threats as he pressures the council to act against them. Recently, Gu Hang successfully regained control of the city from a rogue general, initiating a purge of corrupt officials to replace them with loyal allies. He receives assistance from the Sisters of Battle, dedicated to eradicating cultist influence, and commands a squad of seven space marines from a nearly extinct chapter, recently freed from a century-long punishment for heresy.`;
 const basetext = `The reason why Ossina was asked to screen the whole city was not to ask the girl to investigate the case.
 
 Not professional either.
@@ -122,12 +125,17 @@ function splitTextIntoChunks(text, maxChunkSize, overlapSize) {
 
   for (let i = 0; i < words.length; i++) {
     currentChunk.push(words[i]);
-
     // Check if the current chunk exceeds the maximum size
+    // currentChunk.join(" ") make it so we check the number of characters not the number of element of the array
     if (currentChunk.join(" ").length >= maxChunkSize) {
+      // Add the current chunk to the chunks array
       chunks.push(currentChunk.join(" "));
-      // Prepare the next chunk with overlap
-      currentChunk = currentChunk.slice(-overlapSize);
+
+      // we divide by 4 because overlapSize is a number of caracters while currentChunk is a number of word and
+      // a word is around 4 caracters in average
+      currentChunk = currentChunk.slice(-(overlapSize / 5));
+      currentChunk.unshift("<PREV_CHUNCK_OVERLAP>");
+      currentChunk.push("</PREV_CHUNCK_OVERLAP>");
     }
   }
 
@@ -168,6 +176,11 @@ async function processChunk(chunk, context) {
 
   const messages = [
     { role: "system", content: "You are a helpful assistant." },
+    {
+      role: "user",
+      content:
+        "Your task is to review the following chapter and rewrite the sentences where necessary to improve readability and clarity",
+    },
   ];
   if (globalContext) {
     messages.push({
@@ -178,24 +191,35 @@ async function processChunk(chunk, context) {
   if (previousChapterSummary) {
     messages.push({
       role: "user",
-      content: "Here is the recap of last chapter: " + previousChapterSummary,
+      content:
+        "Here is the recap of last chapter for context: " +
+        previousChapterSummary,
     });
   }
 
   // Include the combined response from previous chunks for context
   if (combinedResponse !== "") {
-    messages.push({ role: "user", content: combinedResponse });
+    messages.push({
+      role: "user",
+      content:
+        "Here is the previous part of the current chapter chunk that you already reworked (for context again). be careful to  " +
+        combinedResponse,
+    });
   }
-
   // Include the current chunk
-  messages.push({ role: "user", content: chunk });
-
-  return await makeAPICall(messages);
+  messages.push({
+    role: "user",
+    content: `Please review the following chapter chunck and rewrite the sentences where necessary to improve readability and clarity. Focus on fixing grammatical errors, awkward phrasing, or sentence structure issues, but try to preserve the author's original style and tone. Do not significantly alter the meaning of the sentences or rewrite them in a completely different way unless absolutely necessary. The goal is to retain the author's voice while making the text smoother and more polished. Provide only the revised version of the chapter, without any additional commentary. Format the output as valid HTML, with each paragraph enclosed in <p> tags. For all spoken dialogue, enclose the quoted parts inside <span> tags. Do not add any explanations, introductions, or conclusions before or after the text. Provide only the revised version of the chapter in the requested HTML format. Do not translate the last sentence of the chunck if it's incomplete. don't rewrite and dont include the part of the text inside <PREV_CHUNCK_OVERLAP> tag except if the text inside is not in your response for the previous chunck. if the sentenceThe chapter chunck : ${chunk}`,
+  });
+  let content = await makeAPICall(messages);
+  const cleanedContent = content.replace(/```html|```/g, "");
+  return cleanedContent;
 }
 
 const summaries = {
   lastChapterSummary: null,
   currentChapterSummary: null,
+  globalContext: currentGlobalContext,
 };
 function updateSummaries() {
   if (!summaries.currentChapterSummary) {
@@ -214,7 +238,7 @@ async function summarizeCurrentChapter(
     { role: "system", content: "You are a helpful assistant." },
     {
       role: "user",
-      content: `Summarize the following text in under ${currentChapterSummaryMaxSize} tokens: ${combinedResponse}`,
+      content: `Summarize the following text in under ${currentChapterSummaryMaxSize} tokens, Provide only the revised version, without any additional commentary. Remove any trace of html that may be present: ${combinedResponse}`,
     },
   ];
 
@@ -231,12 +255,12 @@ async function manageGlobalContext(
     {
       role: "user",
       content:
-        "Here is the recap of the last chapter: " +
+        "You will be asked to summarized some content, here is the recap of the last chapter that will be useful for context: " +
         summariesParam.lastChapterSummary,
     },
     {
       role: "user",
-      content: `Please summarize the following context in under ${globalContextSummaryMaxSize} tokens. Focus on preserving key actions and the main characters' personalities and motivations. Recent events should take precedence, while earlier actions can be summarized or omitted if they are less significant to the current narrative. Ensure essential character traits and motivations are retained. There is no need to reach the token limit if all important actions are already accounted for: ${summariesParam.globalContext}`,
+      content: `Please summarize the following context in under ${globalContextSummaryMaxSize} tokens. Focus on preserving key actions and the main characters' personalities and motivations. Recent events should take precedence, while earlier actions can be summarized or omitted if they are less significant to the current narrative. Ensure essential character traits and motivations are retained. There is no need to reach the token limit if all important actions are already accounted for. Remove any trace of html that may be present. ${summariesParam.globalContext}`,
     },
   ];
 
@@ -257,8 +281,8 @@ router.get("/", async function (req, res, next) {
     This way, when you process the second chunk, it can reference the end of the first chunk, minimizing potential 
     information loss and helping the model maintain a coherent understanding of the narrative.
   */
-  const maxChunkSize = 1200; // Maximum size for each chunk
-  const overlapSize = 200; // Number of overlapping tokens
+  const maxChunkSize = 1200 * 4; // Maximum size for each chunk (*4 because we work with characters not token)
+  const overlapSize = 200 * 4; // Number of overlapping tokens (*4 because we work with characters not token)
   const currentChapterSummaryMaxSize = 500; // Number of tokens for chapter summary
   const globalContextSummaryMaxSize = 1500; // Number of tokens for summary of the whole story
 
@@ -278,6 +302,7 @@ router.get("/", async function (req, res, next) {
   // Process each chunk
   for (const chunk of chunks) {
     try {
+      console.log(100, chunk);
       const content = await processChunk(chunk, context);
       context.combinedResponse += content; // Accumulate the responses
     } catch (e) {
