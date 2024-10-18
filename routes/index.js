@@ -138,73 +138,179 @@ function splitTextIntoChunks(text, maxChunkSize, overlapSize) {
 
   return chunks;
 }
-/* GET home page. */
-router.get("/", async function (req, res, next) {
+async function makeAPICall(messages) {
   const openai = new OpenAI({
     apiKey: SECRET_OPENAI_KEY,
   });
 
-  /*
-  maxChunkSize (1200 tokens) is based on :
-    - Average Word Length: English words typically average about 4 tokens per word (including spaces and punctuation).
-      Expected Chapter Size: An average chapter might contain around 10,000 words, which translates to roughly 40,000 tokens. 
-    - Given the model's context limit of 128,000 tokens, it’s crucial to break down the input to fit the manageable size.
-    - Buffer for Responses: The model can output a maximum of 16,384 tokens. To ensure there's enough space for the model's response, 
-      the input is kept well below the maximum context limit to avoid cutting off responses or running out of context.
+  // if we want to not make the api call (for dev)
+  const allowAPICall = false;
+  if (!allowAPICall) {
+    return "";
+  }
 
-  overlapSize = The purpose of the overlap is to ensure that context is preserved across chunks. 
-  This way, when you process the second chunk, it can reference the end of the first chunk, minimizing potential 
-  information loss and helping the model maintain a coherent understanding of the narrative.
-*/
-  const maxChunkSize = 1200; // Maximum size for each chunk
-  const overlapSize = 200; // Number of overlapping tokens
+  //we make the api call
+  const completion = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages,
+  });
 
-  // Split the text into chunks
-  const chunks = splitTextIntoChunks(text, maxChunkSize, overlapSize);
-  let combinedResponse = "";
+  if (!completion?.choices?.[0]?.message?.content) {
+    throw new Error("Réponse KO");
+  }
 
-  try {
-    // Process each chunk and maintain context
-    for (let i = 0; i < chunks.length; i++) {
-      const chunk = chunks[i];
+  return completion.choices[0].message.content;
+}
+async function processChunk(chunk, context) {
+  const { combinedResponse, previousChapterSummary, globalContext } = context;
 
-      const messages = [
-        { role: "system", content: "You are a helpful assistant." },
-      ];
-
-      // Include the combined response from previous chunks
-      if (i > 0) {
-        messages.push({ role: "user", content: combinedResponse });
-      }
-
-      // Include the current chunk
-      messages.push({ role: "user", content: chunk });
-
-      //we make the api call
-      const allowAPICall = false;
-      if (allowAPICall) {
-        const completion = await openai.chat.completions.create({
-          model: "gpt-4o-mini",
-          messages: messages,
-        });
-        const responseContent = completion.choices[0].message.content;
-        combinedResponse += responseContent + " "; // Combine responses with space for readability
-      }
-    }
-
-    console.log("Final Response:", combinedResponse);
-    res.render("index", {
-      title: "Express",
-      dataAI: combinedResponse.trim(),
-      data: "this is a test",
-    });
-  } catch (e) {
-    res.render("index", {
-      title: "Express",
-      errorAI: e.message,
-      data: "this is a test",
+  const messages = [
+    { role: "system", content: "You are a helpful assistant." },
+  ];
+  if (globalContext) {
+    messages.push({
+      role: "user",
+      content: "Here is the recap of main event for context : " + globalContext,
     });
   }
+  if (previousChapterSummary) {
+    messages.push({
+      role: "user",
+      content: "Here is the recap of last chapter : " + previousChapterSummary,
+    });
+  }
+
+  // Include the combined response from previous chunks for context
+  if (i > 0) {
+    messages.push({ role: "user", content: combinedResponse });
+  }
+
+  // Include the current chunk
+  messages.push({ role: "user", content: chunk });
+
+  return await makeAPICall(messages);
+}
+const summaries = {
+  lastChapterSummary: null,
+  currentChapterSummary: null,
+};
+function updateSummaries() {
+  if (!summaries.currentChapterSummary) {
+    return;
+  }
+
+  summaries.lastChapterSummary = summaries.currentChapterSummary;
+  summaries.currentChapterSummary = null;
+}
+async function summarizeCurrentChapter(
+  combinedResponse,
+  currentChapterSummaryMaxSize
+) {
+  const messages = [
+    { role: "system", content: "You are a helpful assistant." },
+    {
+      role: "user",
+      content: `Summarize the following text in under ${currentChapterSummaryMaxSize} tokens: ${combinedResponse}`,
+    },
+  ];
+
+  return await makeAPICall(messages);
+}
+
+// Function to manage the global context size
+function manageGlobalContext() {
+  const tokenCount = countTokens(globalContext); // Count tokens in the global context
+
+  // If the global context exceeds the token limit, trim it down
+  if (tokenCount > globalContextTokenLimit) {
+    // Optional: You could choose to summarize instead of trimming directly
+    // Here we are simply keeping the last N tokens
+    const tokens = globalContext.split(" ");
+    globalContext = tokens.slice(-50).join(" "); // Keep only the last 50 tokens
+    // Alternatively, summarize the global context if needed
+    // summarizeGlobalContext();
+  }
+}
+
+// Function to count tokens in a string
+function countTokens(text) {
+  // A simple approximation: roughly 4 tokens per word (could vary)
+  const words = text.split(" ");
+  return Math.ceil(words.length / 0.75); // Adjust as needed
+}
+
+/* GET home page. */
+router.get("/", async function (req, res, next) {
+  /*
+    maxChunkSize (1200 tokens) is based on :
+      - Average Word Length: English words typically average about 4 tokens per word (including spaces and punctuation).
+        Expected Chapter Size: An average chapter might contain around 10,000 words, which translates to roughly 40,000 tokens. 
+      - Given the model's context limit of 128,000 tokens, it’s crucial to break down the input to fit the manageable size.
+      - Buffer for Responses: The model can output a maximum of 16,384 tokens. To ensure there's enough space for the model's response, 
+        the input is kept well below the maximum context limit to avoid cutting off responses or running out of context.
+
+    overlapSize = The purpose of the overlap is to ensure that context is preserved across chunks. 
+    This way, when you process the second chunk, it can reference the end of the first chunk, minimizing potential 
+    information loss and helping the model maintain a coherent understanding of the narrative.
+  */
+  const maxChunkSize = 1200; // Maximum size for each chunk
+  const overlapSize = 200; // Number of overlapping tokens
+  const currentChapterSummaryMaxSize = 500; // Number of overlapping tokens
+
+  // we update the summaries
+  updateSummaries();
+
+  // we create the context for the current chapter
+  const context = {
+    combinedResponse: "",
+    previousChapterSummary: summaries.lastChapterSummary,
+    globalContext: summaries.globalContext,
+  };
+
+  // Split the text into chunks
+  const chunks = splitTextIntoChunks(basetext, maxChunkSize, overlapSize);
+
+  // Process each chunk
+  for (const chunk of chunks) {
+    try {
+      const content = await processChunk(chunk, context);
+      context.combinedResponse += content; // Accumulate the responses
+    } catch (e) {
+      return res.render("index", {
+        title: "Express",
+        errorAI: e.message,
+        data: "Error processing chunk.",
+      });
+    }
+  }
+
+  try {
+    // recap the current chapter to be used as context in next chapter
+    summaries.currentChapterSummary = await summarizeCurrentChapter(
+      context.combinedResponse,
+      currentChapterSummaryMaxSize
+    );
+
+    // Update the global context with the new summary
+    globalContext += summaries.currentChapterSummary + " ";
+  } catch (e) {
+    return res.render("index", {
+      title: "Express",
+      errorAI: e.message,
+      data: "Error summarizing chapter.",
+    });
+  }
+
+  // Clean up the global context if it exceeds the token limit
+  manageGlobalContext();
+
+  // return the processed chapter
+  res.render("index", {
+    title: "Express",
+    dataAI: context.combinedResponse.trim(),
+    data: "this is a test",
+    lastChapterSummary,
+  });
 });
 
 module.exports = router;
