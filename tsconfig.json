@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "module": "node16",
+    "moduleResolution": "Node16", 
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit":true,
+    "allowImportingTsExtensions": true, 
+    "resolveJsonModule":true,
+    "outDir": "./dist"
+  },
+  "include": [ "app.ts", "routes/**/*", "public/**/*", "models/**/*", "business/**/*", "bin/**/*"],
+  "exclude": ["node_modules", "dist"]
+}

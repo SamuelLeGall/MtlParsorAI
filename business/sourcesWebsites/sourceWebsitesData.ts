@@ -1,4 +1,4 @@
-const configUrlSourceWebsite = {
+export const configUrlSourceWebsite = {
   sourceSiteCode: "WTR_LAB",
   serieCode: 4635,
   serieBaseUrl:
@@ -6,10 +6,3 @@ const configUrlSourceWebsite = {
   chapterFragment: "/chapter-",
   chapterNumber: 96,
 };
-
-export function getSourceWebsiteConfig(codeSource) {
-  switch (codeSource) {
-    case "WTR_LAB":
-      return configUrlSourceWebsite;
-  }
-}

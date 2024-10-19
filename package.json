@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "nodemon ./bin/www --ext js,ts,mjs,cjs,json,hbs,css"
+    "dev": "tsx watch ./bin/www.ts"
   },
   "dependencies": {
     "axios": "^1.7.7",
@@ -18,7 +18,18 @@
     "openai": "^4.68.0"
   },
   "devDependencies": {
+    "@types/connect-livereload": "^0.6.3",
+    "@types/cookie-parser": "^1.4.7",
+    "@types/debug": "^4.1.12",
+    "@types/express": "^5.0.0",
+    "@types/hbs": "^4.0.4",
+    "@types/http-errors": "^2.0.4",
+    "@types/livereload": "^0.9.5",
+    "@types/morgan": "^1.9.9",
+    "@types/node": "^22.7.6",
     "connect-livereload": "^0.6.1",
-    "livereload": "^0.9.3"
+    "livereload": "^0.9.3",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.3"
   }
 }

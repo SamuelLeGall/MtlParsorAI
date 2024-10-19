@@ -4,7 +4,7 @@
  * Module dependencies.
  */
 
-import app from "../app.js";
+import app from "../app.ts";
 import createDebug from "debug";
 const debug = createDebug("myexpressapp:server");
 import { createServer } from "http";
@@ -34,7 +34,7 @@ server.on("listening", onListening);
  * Normalize a port into a number, string, or false.
  */
 
-function normalizePort(val) {
+function normalizePort(val: any) {
   var port = parseInt(val, 10);
 
   if (isNaN(port)) {
@@ -54,7 +54,7 @@ function normalizePort(val) {
  * Event listener for HTTP server "error" event.
  */
 
-function onError(error) {
+function onError(error: any) {
   if (error.syscall !== "listen") {
     throw error;
   }
@@ -80,6 +80,10 @@ function onError(error) {
 
 function onListening() {
   var addr = server.address();
-  var bind = typeof addr === "string" ? "pipe " + addr : "port " + addr.port;
-  debug("Listening on " + bind);
+  if (addr) {
+    var bind = typeof addr === "string" ? "pipe " + addr : "port " + addr.port;
+    debug("Listening on " + bind);
+  } else {
+    debug("Not Listening (no addr)");
+  }
 }

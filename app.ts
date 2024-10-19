@@ -8,7 +8,7 @@ import hbs from "hbs";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 
-import indexRouter from "./routes/index.js";
+import indexRouter from "./routes/index.ts";
 
 // Create a livereload server
 const liveReloadServer = createServer();
@@ -27,7 +27,7 @@ var app = express();
 app.set("views", join(__dirname, "views"));
 app.set("view engine", "hbs");
 
-hbs.registerHelper("json", function (context) {
+hbs.registerHelper("json", function (context: any) {
   return JSON.stringify(context);
 });
 
@@ -45,12 +45,12 @@ app.use(express.static(join(__dirname, "public")));
 app.use("/", indexRouter);
 
 // Catch 404 and forward to error handler
-app.use(function (req, res, next) {
+app.use(function (req: any, res: any, next: any) {
   next(createError(404));
 });
 
 // Error handler
-app.use(function (err, req, res, next) {
+app.use(function (err: any, req: any, res: any, next: any) {
   // Set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get("env") === "development" ? err : {};
