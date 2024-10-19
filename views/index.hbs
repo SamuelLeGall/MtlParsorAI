@@ -1,5 +1,11 @@
-<h3>Welcome to {{title}}</h3>
+<h3>Welcomes to {{title}}</h3>
+<div>
+{{#IsNotFirstChapter config.chapterNumber}}  
+    <button id="prev-chapter" onclick="showPreviousChapter()">Previous</button>
+{{/IsNotFirstChapter}}
 <button id="load-chapter" onclick="loadChapter()">Load Chapter</button>
+<button id="next-chapter" onclick="showNextChapter()">Next</button>
+</div>
 <div id="chapter-container">
     <!-- This is where the loaded chapter will be inserted -->
     <div id="chapter-content"></div>

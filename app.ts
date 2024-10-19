@@ -27,9 +27,25 @@ var app = express();
 app.set("views", join(__dirname, "views"));
 app.set("view engine", "hbs");
 
-hbs.registerHelper("json", function (context: any) {
+hbs.registerHelper("json", (context: any) => {
   return JSON.stringify(context);
 });
+hbs.registerHelper(
+  "IsNotFirstChapter",
+  (
+    aString: string,
+    options: {
+      fn: (context: any) => any;
+      inverse: (context: any) => any;
+    }
+  ) => {
+    const value = parseInt(aString);
+    if (Number.isNaN(value)) {
+      return options.inverse(this);
+    }
+    return value > 1 ? options.fn(this) : options.inverse(this);
+  }
+);
 
 // Use connect-livereload middleware to inject livereload script into the pages
 app.use(connectLivereload());
@@ -49,12 +65,12 @@ app.use(function (req: any, res: any, next: any) {
   next(createError(404));
 });
 
+console.log("link for test is ", "http://localhost:3000/");
 // Error handler
 app.use(function (err: any, req: any, res: any, next: any) {
   // Set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get("env") === "development" ? err : {};
-  console.log("link for test is ", "http://localhost:3000/");
   res.status(err.status || 500);
   res.render("error");
 });

@@ -48,4 +48,10 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("There was a problem with the fetch operation:", error);
     }
   };
+  window.showPreviousChapter = async function showPreviousChapter() {
+    if (!configUrlSourceWebsite.chapterNumber) {
+      return;
+    }
+  };
+  window.showNextChapter = async function showNextChapter() {};
 });
