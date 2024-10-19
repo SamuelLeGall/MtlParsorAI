@@ -21,16 +21,18 @@ router.post("/load", async function (req: any, res: any, next: any) {
   const url =
     req.body.url ||
     "https://wtr-lab.com/en/serie-4635/start-with-planetary-governor/chapter-96";
+  const allowBiggerLimit = req.body.allowBiggerLimit || false;
   const sourceCode = "WTR_LAB";
 
   const orchestrator = new generativeTextOrchestrator(sourceCode);
-  const dataChapter = await orchestrator.computeChapter(url);
+  const dataChapter = await orchestrator.computeChapter(url, allowBiggerLimit);
 
   // if there is an error
   if (!dataChapter.success) {
-    return res.render("index", {
-      title: "Express",
+    return res.render("error", {
+      title: "Error",
       errorAI: dataChapter.message,
+      detail: dataChapter.detail,
     });
   }
 

@@ -16,6 +16,13 @@ export class chunckParsor {
   // Function to split text into chunks
   splitTextIntoChunks(text: string) {
     const sentences = text.split(/(?<=[.!?])\s+/); // Split by sentence-ending punctuation
+    console.log(
+      "text has been split in " +
+        sentences.length +
+        " sentences for " +
+        text.length +
+        " characters"
+    );
     const chunks: string[] = [];
     let currentChunk: string[] = [];
 
@@ -25,9 +32,14 @@ export class chunckParsor {
       // If the sentence is too long, break it down into smaller parts
       while (sentence.length > this.maxSentenceLength) {
         const part = sentence.slice(0, this.maxSentenceLength);
-        chunks.push([...currentChunk, part].join(" ")); // Add current chunk + part
+        // Check if adding this part would exceed maxChunkSize
+        if (currentChunk.join(" ").length + part.length >= this.maxChunkSize) {
+          // Push the current chunk if it exceeds maxChunkSize
+          chunks.push(currentChunk.join(" "));
+          currentChunk = [];
+        }
+        currentChunk.push(part);
         sentence = sentence.slice(this.maxSentenceLength); // Remove the processed part
-        currentChunk = []; // Reset current chunk for the next part
       }
 
       // Add the sentence to the current chunk

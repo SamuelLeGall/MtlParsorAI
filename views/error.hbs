@@ -1,3 +1,6 @@
-<h1>{{message}}</h1>
-<h2>{{error.status}}</h2>
-<pre>{{error.stack}}</pre>
+<h1> {{title}} </h1>
+<p>{{errorAI}}</p>
+<hr>
+{{#if detail}}
+<p>{{ detail.chunks}}</p>
+{{/if}}

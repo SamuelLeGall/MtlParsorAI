@@ -17,6 +17,8 @@ export class generativeTextOrchestrator {
     overlapSize = The purpose of the overlap is to ensure that context is preserved across chunks. 
     This way, when you process the second chunk, it can reference the end of the first chunk, minimizing potential 
     information loss and helping the model maintain a coherent understanding of the narrative.
+
+    We currently stop the process for chapter bigger that 22000 characters (around 225/250 sentences). We can with a param in the body allow to go way higher (600 to 700 sentences).
   */
   private maxChunkSize = 1200 * 4; // Maximum size for each chunk (*4 because we work with characters not token)
   private overlapSize = 4; // Number of overlapping sentences
@@ -42,13 +44,29 @@ export class generativeTextOrchestrator {
     );
   }
 
-  async computeChapter(url: string): computeChapterResponse {
+  async computeChapter(
+    url: string,
+    allowBiggerLimit?: boolean
+  ): computeChapterResponse {
     // first we fetch the actual mth text from a specified website
     const sourceObject = await this.instanceSourceWebsite.fetchChapterText(url);
     if (!sourceObject?.data?.body) {
       return {
         success: false,
         message: `Error While fetching the data - no data.body in response`,
+      };
+    }
+
+    if (sourceObject.data.body.length > 25000 && !allowBiggerLimit) {
+      return {
+        success: false,
+        message:
+          `Error will require too many chunks to process - source chapter length is around :` +
+          sourceObject.data.body.length,
+        detail: {
+          chunks: "here is the url used to eventually do it anyway" + url,
+          allowBiggerLimit: true,
+        },
       };
     }
 
@@ -60,13 +78,18 @@ export class generativeTextOrchestrator {
       sourceObject.data.body
     );
 
-    // we expect a chapter to generate around 2 to 3 chuncks so if more that 4 there is an issue we dont do the api calls
-    if (chunks.length >= 4) {
+    // we expect a chapter to be around 8000 words (but i've seen some at 40K...) and generate around 2 to 3 chuncks so if more that 5 there is an issue we dont do the api calls
+    if ((chunks.length > 5 && !allowBiggerLimit) || chunks.length > 15) {
       return {
         success: false,
-        message: `Error too many chunks to process. (count:${chunks.length})`,
+        message: `Error too many chunks to process. (count:${chunks.length}) -  source chapter length is around ${sourceObject.data.body.length}`,
+        detail: {
+          chunks,
+        },
       };
     }
+
+    console.log("processing " + chunks.length + " chuncks");
 
     // Process each chunk
     for (const chunk of chunks) {
