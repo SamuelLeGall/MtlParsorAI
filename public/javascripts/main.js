@@ -161,9 +161,9 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   window.showSpecificChapter = async function showSpecificChapter() {
-    const chapterNumberToLoad = document.getElementById(
-      "selected-chapter-input"
-    ).value;
+    const chapterNumberToLoad = parseInt(
+      document.getElementById("selected-chapter-input").value
+    );
 
     document.getElementById("chapter-content").innerHTML = "<p>loading...</p>";
     const response = await loadCurrentChapter(chapterNumberToLoad);
@@ -171,6 +171,9 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
     document.getElementById("chapter-content").innerHTML = response.chapterData; // Update the chapter content
+
+    // we update the current chapterNumber
+    configUrlSourceWebsite.chapterNumber = chapterNumberToLoad;
 
     // load next chapter first because more likely it's going to be visited instead of the previous one
     await loadNextChapter(chapterNumberToLoad);
