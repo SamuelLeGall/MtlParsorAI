@@ -25,12 +25,20 @@ function fetchCachedChapter(sourceSiteCode, serieCode, chapterNumber) {
 function addChapterToCache(sourceSiteCode, urlData, chapterData) {
   let storeForSourceSite = store[sourceSiteCode];
   const chapter = {
-    urlData: { ...urlData },
+    urlData,
     data: chapterData,
   };
 
   // no cache for this source website
   if (!storeForSourceSite) {
+    console.log(
+      "adding sourceSite " +
+        sourceSiteCode +
+        " in store with chapter " +
+        chapter.urlData.chapterNumber +
+        " in it",
+      chapter.urlData
+    );
     store[sourceSiteCode] = [chapter];
     return;
   }
@@ -43,6 +51,12 @@ function addChapterToCache(sourceSiteCode, urlData, chapterData) {
 
   // the current chapter is already cached. nothing to do
   if (chapterFromStore) {
+    console.log(
+      "chapter " +
+        chapter.urlData.chapterNumber +
+        " is already In store - do nothing",
+      chapter.urlData
+    );
     return;
   }
 

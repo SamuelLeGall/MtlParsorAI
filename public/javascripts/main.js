@@ -1,39 +1,31 @@
 import { fetchCachedChapter, addChapterToCache } from "./cache.js";
 document.addEventListener("DOMContentLoaded", () => {
-  window.loadChapter = async function loadChapter() {
+  window.loadChapter = async function loadChapter(chapterNumber) {
     try {
-      document.getElementById("chapter-content").innerHTML =
-        "<p>loading...</p>";
+      const chapterNumberProcessed =
+        chapterNumber ?? configUrlSourceWebsite.chapterNumber;
 
       // configUrlSourceWebsite is set in index.hbs using data from the back
       const chapterStore = fetchCachedChapter(
         configUrlSourceWebsite.sourceSiteCode,
         configUrlSourceWebsite.serieCode,
-        configUrlSourceWebsite.chapterNumber
+        chapterNumberProcessed
       );
 
       // chapter in the store, no need to call the api again
       if (chapterStore) {
         console.log(
-          "chapter " +
-            configUrlSourceWebsite.chapterNumber +
-            " is in the store",
+          "chapter " + chapterNumberProcessed + " is in the store",
           chapterStore
         );
-        document.getElementById("chapter-content").innerHTML =
-          chapterStore.data; // Update the chapter content
-        return;
+        return chapterStore.data;
       }
 
-      console.log(
-        "fetching the chapter " +
-          configUrlSourceWebsite.chapterNumber +
-          " by API"
-      );
+      console.log("fetching the chapter " + chapterNumberProcessed + " by API");
       const url =
         configUrlSourceWebsite.serieBaseUrl +
         configUrlSourceWebsite.chapterFragment +
-        configUrlSourceWebsite.chapterNumber;
+        chapterNumberProcessed;
       const response = await fetch("/load", {
         method: "POST",
         headers: {
@@ -47,33 +39,105 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       const chapterHtml = await response.text(); // Get HTML response directly
-      document.getElementById("chapter-content").innerHTML = chapterHtml; // Update the chapter content
 
-      // we save the response in the store
-      addChapterToCache(
-        configUrlSourceWebsite.sourceSiteCode,
-        configUrlSourceWebsite,
-        chapterHtml
-      );
+      // we save the response in the store with the correct urlData
+      const urlData = { ...configUrlSourceWebsite };
+      // configUrlSourceWebsite is about the current chapter, so we update the number is this shallow copy without affecting the original object
+      urlData.chapterNumber = chapterNumberProcessed;
+      addChapterToCache(urlData.sourceSiteCode, urlData, chapterHtml);
+
+      return chapterHtml;
     } catch (error) {
       console.error("There was a problem with the fetch operation:", error);
+      throw new Error("Error happened");
     }
+  };
+  window.loadPreviousChapter = async function loadPreviousChapter(
+    currentChapterNumber
+  ) {
+    try {
+      if (
+        !configUrlSourceWebsite.chapterNumber ||
+        configUrlSourceWebsite.chapterNumber <= 1
+      ) {
+        return { success: false };
+      }
+      const chapterData = await loadChapter(currentChapterNumber - 1);
+      return { success: true, chapterData };
+    } catch (e) {
+      return { success: false };
+    }
+  };
+  window.loadCurrentChapter = async function loadCurrentChapter(
+    currentChapterNumber
+  ) {
+    try {
+      const chapterData = await loadChapter(currentChapterNumber);
+      return { success: true, chapterData };
+    } catch (e) {
+      return { success: false };
+    }
+  };
+  window.loadNextChapter = async function loadNextChapter(
+    currentChapterNumber
+  ) {
+    try {
+      const chapterData = await loadChapter(currentChapterNumber + 1);
+      return { success: true, chapterData };
+    } catch (e) {
+      return { success: false };
+    }
+  };
+  window.showCurrentChapter = async function showCurrentChapter() {
+    document.getElementById("chapter-content").innerHTML = "<p>loading...</p>";
+    const response = await loadCurrentChapter(
+      configUrlSourceWebsite.chapterNumber
+    );
+    if (!response.success) {
+      return;
+    }
+    document.getElementById("chapter-content").innerHTML = response.chapterData; // Update the chapter content
+
+    // load previous chapter
+    await loadPreviousChapter(configUrlSourceWebsite.chapterNumber);
+
+    // load next chapter
+    await loadNextChapter(configUrlSourceWebsite.chapterNumber);
   };
   window.showPreviousChapter = async function showPreviousChapter() {
-    if (
-      !configUrlSourceWebsite.chapterNumber ||
-      configUrlSourceWebsite.chapterNumber <= 1
-    ) {
+    document.getElementById("chapter-content").innerHTML = "<p>loading...</p>";
+
+    // load previous chapter
+    const response = await loadPreviousChapter(
+      configUrlSourceWebsite.chapterNumber
+    );
+    if (!response.success) {
       return;
     }
+    document.getElementById("chapter-content").innerHTML = response.chapterData; // Update the chapter content
+
+    // we update the current chapterNumber
     configUrlSourceWebsite.chapterNumber -= 1;
-    await loadChapter();
+
+    // load 2 chapter before ( because we just updated the chapter number)
+    await loadPreviousChapter(configUrlSourceWebsite.chapterNumber);
   };
   window.showNextChapter = async function showNextChapter() {
-    if (!configUrlSourceWebsite.chapterNumber) {
+    document.getElementById("chapter-content").innerHTML = "<p>loading...</p>";
+
+    // load next chapter
+    const response = await loadNextChapter(
+      configUrlSourceWebsite.chapterNumber
+    );
+    if (!response.success) {
       return;
     }
+    document.getElementById("chapter-content").innerHTML = response.chapterData; // Update the chapter content
+
+    // we update the current chapterNumber
     configUrlSourceWebsite.chapterNumber += 1;
-    await loadChapter();
+
+    // load 2 chapter after ( because we just updated the chapter number)
+    await loadNextChapter(configUrlSourceWebsite.chapterNumber);
   };
 });
