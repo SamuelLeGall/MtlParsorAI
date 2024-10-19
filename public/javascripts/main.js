@@ -14,11 +14,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // chapter in the store, no need to call the api again
       if (chapterStore) {
+        console.log(
+          "chapter " +
+            configUrlSourceWebsite.chapterNumber +
+            " is in the store",
+          chapterStore
+        );
         document.getElementById("chapter-content").innerHTML =
           chapterStore.data; // Update the chapter content
         return;
       }
 
+      console.log(
+        "fetching the chapter " +
+          configUrlSourceWebsite.chapterNumber +
+          " by API"
+      );
       const url =
         configUrlSourceWebsite.serieBaseUrl +
         configUrlSourceWebsite.chapterFragment +
@@ -49,9 +60,20 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
   window.showPreviousChapter = async function showPreviousChapter() {
+    if (
+      !configUrlSourceWebsite.chapterNumber ||
+      configUrlSourceWebsite.chapterNumber <= 1
+    ) {
+      return;
+    }
+    configUrlSourceWebsite.chapterNumber -= 1;
+    await loadChapter();
+  };
+  window.showNextChapter = async function showNextChapter() {
     if (!configUrlSourceWebsite.chapterNumber) {
       return;
     }
+    configUrlSourceWebsite.chapterNumber += 1;
+    await loadChapter();
   };
-  window.showNextChapter = async function showNextChapter() {};
 });

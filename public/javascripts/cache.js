@@ -9,6 +9,7 @@ function fetchCachedChapter(sourceSiteCode, serieCode, chapterNumber) {
     return null;
   }
 
+  console.log("checking store for chapter number", chapterNumber);
   const chapterData = sourceSiteCache.find(
     (el) =>
       el.urlData.serieCode === serieCode &&
@@ -24,7 +25,7 @@ function fetchCachedChapter(sourceSiteCode, serieCode, chapterNumber) {
 function addChapterToCache(sourceSiteCode, urlData, chapterData) {
   let storeForSourceSite = store[sourceSiteCode];
   const chapter = {
-    urlData,
+    urlData: { ...urlData },
     data: chapterData,
   };
 
@@ -35,7 +36,9 @@ function addChapterToCache(sourceSiteCode, urlData, chapterData) {
   }
 
   const chapterFromStore = storeForSourceSite.find(
-    (el) => el.serieCode === serieCode && el.chapterNumber === chapterNumber
+    (el) =>
+      el.urlData.serieCode === urlData.serieCode &&
+      el.urlData.chapterNumber === urlData.chapterNumber
   );
 
   // the current chapter is already cached. nothing to do
@@ -44,6 +47,10 @@ function addChapterToCache(sourceSiteCode, urlData, chapterData) {
   }
 
   // there is cached chapter for this serie but not the current one
+  console.log(
+    "adding chapter " + chapter.urlData.chapterNumber + " In store",
+    chapter.urlData
+  );
   storeForSourceSite.push(chapter);
   return;
 }
