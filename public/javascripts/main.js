@@ -1,5 +1,13 @@
-import { fetchCachedChapter, addChapterToCache } from "./cache.js";
+import {
+  fetchCachedChapter,
+  addChapterToCache,
+  checkInitStore,
+  saveStoreToLocalStorage,
+} from "./cache.js";
 document.addEventListener("DOMContentLoaded", () => {
+  // we restore the store from localStorage if it exist on first page load
+  checkInitStore();
+
   window.loadChapter = async function loadChapter(chapterNumber) {
     try {
       const chapterNumberProcessed =
@@ -45,7 +53,84 @@ document.addEventListener("DOMContentLoaded", () => {
       // configUrlSourceWebsite is about the current chapter, so we update the number is this shallow copy without affecting the original object
       urlData.chapterNumber = chapterNumberProcessed;
       addChapterToCache(urlData.sourceSiteCode, urlData, chapterHtml);
+      function cleanStoreChapters(
+        store,
+        chaptersToKeep,
+        currentSourceId,
+        currentSerieId
+      ) {
+        let allChapters = [];
 
+        // Collect all chapters from the store
+        store.data.forEach((source) => {
+          source.chaptersList.forEach((chapter) => {
+            allChapters.push(chapter);
+          });
+        });
+
+        // Sort chapters by creation date (oldest first)
+        allChapters.sort(
+          (a, b) => new Date(a.urlData.created) - new Date(b.urlData.created)
+        );
+
+        // Filter out chapters that belong to the current series, we will clean them last
+        const nonCurrentChapters = allChapters.filter(
+          (chapter) =>
+            !(
+              chapter.urlData.sourceSiteCode === currentSourceId &&
+              chapter.urlData.serieCode === currentSerieId
+            )
+        );
+
+        const currentSeriesChapters = allChapters.filter(
+          (chapter) =>
+            chapter.urlData.sourceSiteCode === currentSourceId &&
+            chapter.urlData.serieCode === currentSerieId
+        );
+
+        // Calculate how many chapters we need to remove
+        const totalChapters = allChapters.length;
+        const chaptersToRemove = totalChapters - chaptersToKeep;
+
+        if (chaptersToRemove <= 0) {
+          return; // Nothing to clean if we are under the limit
+        }
+
+        // Start cleaning from the non-current chapters (remove the oldest ones first)
+        let cleanedChapters = [];
+
+        // Remove the oldest from non-current series chapters first
+        for (
+          let i = 0;
+          i < chaptersToRemove && nonCurrentChapters.length > 0;
+          i++
+        ) {
+          cleanedChapters.push(nonCurrentChapters.shift());
+        }
+
+        // If there are still more chapters to remove, start cleaning current series
+        for (
+          let i = cleanedChapters.length;
+          i < chaptersToRemove && currentSeriesChapters.length > 0;
+          i++
+        ) {
+          cleanedChapters.push(currentSeriesChapters.shift());
+        }
+
+        // Remove the cleaned chapters from the store
+        cleanedChapters.forEach((chapterToRemove) => {
+          store.data.forEach((source) => {
+            source.chaptersList = source.chaptersList.filter(
+              (chapter) => chapter !== chapterToRemove
+            );
+          });
+        });
+
+        return {
+          cleaned: cleanedChapters.length,
+          remaining: store.data,
+        };
+      }
       return chapterHtml;
     } catch (error) {
       console.error("There was a problem with the fetch operation:", error);
@@ -103,6 +188,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // load previous chapter
     await loadPreviousChapter(configUrlSourceWebsite.chapterNumber);
+
+    // we save the store into localStorage
+    saveStoreToLocalStorage();
   };
   window.showPreviousChapter = async function showPreviousChapter() {
     document.getElementById("chapter-content").innerHTML = "<p>loading...</p>";
@@ -121,6 +209,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // load 2 chapter before ( because we just updated the chapter number)
     await loadPreviousChapter(configUrlSourceWebsite.chapterNumber);
+
+    // we save the store into localStorage
+    saveStoreToLocalStorage();
   };
   window.showNextChapter = async function showNextChapter() {
     document.getElementById("chapter-content").innerHTML = "<p>loading...</p>";
@@ -139,5 +230,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // load 2 chapter after ( because we just updated the chapter number)
     await loadNextChapter(configUrlSourceWebsite.chapterNumber);
+
+    // we save the store into localStorage
+    saveStoreToLocalStorage();
   };
 });
