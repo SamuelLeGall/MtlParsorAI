@@ -53,7 +53,7 @@ export class generativeTextOrchestrator {
     if (!sourceObject?.data?.body) {
       return {
         success: false,
-        message: `Error While fetching the data - no data.body in response`,
+        message: `Error While fetching the chapter - Does the chapter exist ? - ${url}`,
       };
     }
 
