@@ -63,7 +63,7 @@ button {
   will-change: transform, opacity;
   z-index: 0;
 }
-@media (width < 500px) {
+@media (width > 500px) {
   button {
   font-size: 25px;
   font-weight: 800;
