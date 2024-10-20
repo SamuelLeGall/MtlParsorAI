@@ -5,10 +5,9 @@ export interface sharedContext {
   currentChapterSummary: string | null;
   globalContext: string | null;
   currentChapterText: string | null;
-  destination: sharedContextDestination | null;
 }
 
-export interface sharedContextDestination {
+export interface destination {
   sourceSiteCode: sourceWebsiteCode;
   serieCode: number;
   serieBaseUrl: string;

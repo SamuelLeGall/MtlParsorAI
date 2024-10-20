@@ -137,11 +137,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     document.getElementById("chapter-content").innerHTML = response.chapterData; // Update the chapter content
 
-    // load next chapter first because more likely it's going to be visited instead of the previous one
-    await loadNextChapter(configUrlSourceWebsite.chapterNumber);
+    await Promise.all([
+      // load next chapter first because more likely it's going to be visited instead of the previous one
+      loadNextChapter(configUrlSourceWebsite.chapterNumber),
 
-    // load previous chapter
-    await loadPreviousChapter(configUrlSourceWebsite.chapterNumber);
+      // load previous chapter
+      loadPreviousChapter(configUrlSourceWebsite.chapterNumber),
+    ]);
 
     // we save the store into localStorage
     saveStoreToLocalStorage();
@@ -161,15 +163,17 @@ document.addEventListener("DOMContentLoaded", () => {
     // we update the current chapterNumber
     configUrlSourceWebsite.chapterNumber -= 1;
 
-    // we tell the backend that we changed chapter (necessary because of the cached chapter)
-    updateDestinationBack(
-      configUrlSourceWebsite.sourceSiteCode,
-      configUrlSourceWebsite.serieCode,
-      configUrlSourceWebsite.chapterNumber
-    );
+    await Promise.all([
+      // we tell the backend that we changed chapter (necessary because of the cached chapter)
+      await updateDestinationBack(
+        configUrlSourceWebsite.sourceSiteCode,
+        configUrlSourceWebsite.serieCode,
+        configUrlSourceWebsite.chapterNumber
+      ),
 
-    // load 2 chapter before ( because we just updated the chapter number)
-    await loadPreviousChapter(configUrlSourceWebsite.chapterNumber);
+      // load 2 chapter before ( because we just updated the chapter number)
+      loadPreviousChapter(configUrlSourceWebsite.chapterNumber),
+    ]);
 
     // we save the store into localStorage
     saveStoreToLocalStorage();
@@ -189,15 +193,17 @@ document.addEventListener("DOMContentLoaded", () => {
     // we update the current chapterNumber
     configUrlSourceWebsite.chapterNumber += 1;
 
-    // we tell the backend that we changed chapter (necessary because of the cached chapter)
-    updateDestinationBack(
-      configUrlSourceWebsite.sourceSiteCode,
-      configUrlSourceWebsite.serieCode,
-      configUrlSourceWebsite.chapterNumber
-    );
+    await Promise.all([
+      // we tell the backend that we changed chapter (necessary because of the cached chapter)
+      updateDestinationBack(
+        configUrlSourceWebsite.sourceSiteCode,
+        configUrlSourceWebsite.serieCode,
+        configUrlSourceWebsite.chapterNumber
+      ),
 
-    // load 2 chapter after ( because we just updated the chapter number)
-    await loadNextChapter(configUrlSourceWebsite.chapterNumber);
+      // load 2 chapter after ( because we just updated the chapter number)
+      loadNextChapter(configUrlSourceWebsite.chapterNumber),
+    ]);
 
     // we save the store into localStorage
     saveStoreToLocalStorage();
@@ -218,18 +224,20 @@ document.addEventListener("DOMContentLoaded", () => {
     // we update the current chapterNumber
     configUrlSourceWebsite.chapterNumber = chapterNumberToLoad;
 
-    // we tell the backend that we changed chapter (necessary because of the cached chapter)
-    updateDestinationBack(
-      configUrlSourceWebsite.sourceSiteCode,
-      configUrlSourceWebsite.serieCode,
-      configUrlSourceWebsite.chapterNumber
-    );
+    await Promise.all([
+      // we tell the backend that we changed chapter (necessary because of the cached chapter)
+      updateDestinationBack(
+        configUrlSourceWebsite.sourceSiteCode,
+        configUrlSourceWebsite.serieCode,
+        configUrlSourceWebsite.chapterNumber
+      ),
 
-    // load next chapter first because more likely it's going to be visited instead of the previous one
-    await loadNextChapter(chapterNumberToLoad);
+      // load next chapter first because more likely it's going to be visited instead of the previous one
+      loadNextChapter(chapterNumberToLoad),
 
-    // load previous chapter
-    await loadPreviousChapter(chapterNumberToLoad);
+      // load previous chapter
+      loadPreviousChapter(chapterNumberToLoad),
+    ]);
 
     // we save the store into localStorage
     saveStoreToLocalStorage();

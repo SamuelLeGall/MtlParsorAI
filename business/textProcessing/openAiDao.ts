@@ -12,7 +12,7 @@ export class openAiDao {
     });
 
     // if we want to not make the api call (for dev)
-    const allowAPICall = false;
+    const allowAPICall = true;
     if (!allowAPICall) {
       return "";
     }

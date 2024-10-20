@@ -1,14 +1,27 @@
 import axios from "axios";
 import { load } from "cheerio";
 import { sourceWebsiteCode, wtrLabModel } from "../../models/sourceWebsite.ts";
-import { configUrlSourceWebsite } from "./sourceWebsitesData.ts";
-import { sourceWebsiteConfig } from "../../models/contexte.ts";
+import { destination } from "../../models/contexte.ts";
 
 export class sourceWebsiteManager {
-  private code: sourceWebsiteCode;
+  private destination: destination;
 
-  constructor(sourceCode: sourceWebsiteCode) {
-    this.code = sourceCode;
+  constructor(destination: destination) {
+    this.destination = destination;
+  }
+
+  getDestination(): destination {
+    return this.destination;
+  }
+
+  updateDestination(
+    sourceSiteCode: sourceWebsiteCode,
+    serieCode: number,
+    chapterNumber: number
+  ): void {
+    this.destination.sourceSiteCode = sourceSiteCode;
+    this.destination.serieCode = serieCode;
+    this.destination.chapterNumber = chapterNumber;
   }
 
   private async fetchUrlHTML(url: string) {
@@ -40,7 +53,7 @@ export class sourceWebsiteManager {
       let scriptContent: wtrLabModel | null = null;
 
       // mapping to get title and libelle depending on the source website
-      switch (this.code) {
+      switch (this.destination.sourceSiteCode) {
         case "WTR_LAB":
         default:
           console.log("source is wtr-lab");

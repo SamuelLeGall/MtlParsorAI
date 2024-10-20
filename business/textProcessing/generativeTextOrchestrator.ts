@@ -1,7 +1,4 @@
-import {
-  computeChapterResponse,
-  sharedContextDestination,
-} from "../../models/contexte.ts";
+import { computeChapterResponse } from "../../models/contexte.ts";
 import { sourceWebsiteCode } from "../../models/sourceWebsite.ts";
 import { sourceWebsiteManager } from "../sourcesWebsites/sourceWebsiteManager.ts";
 import { chunckParsor } from "./chunckParsor.ts";
@@ -33,15 +30,13 @@ export class generativeTextOrchestrator {
   private instanceSourceWebsite: sourceWebsiteManager;
   private instanceParsor: chunckParsor;
 
-  constructor(instanceSharedContext: sharedContextManager) {
+  constructor(instanceSourceWebsite: sourceWebsiteManager) {
+    this.instanceSourceWebsite = instanceSourceWebsite;
     this.instanceRequestManager = new requestManager(
       this.currentChapterSummaryMaxSize,
       this.globalContextSummaryMaxSize
     );
-    this.instanceSharedContext = instanceSharedContext;
-    const sourceCode: sourceWebsiteCode =
-      this.instanceSharedContext.getDestination()?.sourceSiteCode || "WTR_LAB";
-    this.instanceSourceWebsite = new sourceWebsiteManager(sourceCode);
+    this.instanceSharedContext = new sharedContextManager();
     this.instanceParsor = new chunckParsor(
       this.maxChunkSize,
       this.overlapSize,

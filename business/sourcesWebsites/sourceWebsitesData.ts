@@ -1,6 +1,6 @@
-import { sharedContextDestination } from "../../models/contexte.ts";
+import { destination } from "../../models/contexte.ts";
 
-export const sharedContextDestinationBase: sharedContextDestination = {
+export const destinationBase: destination = {
   sourceSiteCode: "WTR_LAB",
   serieCode: 4635,
   serieBaseUrl:

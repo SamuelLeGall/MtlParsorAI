@@ -1,19 +1,17 @@
 import { Router } from "express";
 import { generativeTextOrchestrator } from "../business/textProcessing/generativeTextOrchestrator.ts";
 import { sourceWebsiteCode } from "../models/sourceWebsite.ts";
-import { sharedContextManager } from "../business/textProcessing/sharedContextManager.ts";
-import { sharedContextDestinationBase } from "../business/sourcesWebsites/sourceWebsitesData.ts";
+import { destinationBase } from "../business/sourcesWebsites/sourceWebsitesData.ts";
+import { sourceWebsiteManager } from "../business/sourcesWebsites/sourceWebsiteManager.ts";
 var router = Router();
-const instanceSharedContext = new sharedContextManager(
-  sharedContextDestinationBase
-);
+const instanceSourceWebsite = new sourceWebsiteManager(destinationBase);
 
 /* GET home page. */
 router.get("/", async function (req: any, res: any, next: any) {
   // return the processed chapter
   res.render("index", {
     title: "MtlParsorAI",
-    destination: instanceSharedContext.getDestination(),
+    destination: instanceSourceWebsite.getDestination(),
   });
 });
 
@@ -23,7 +21,7 @@ router.post("/load", async function (req: any, res: any, next: any) {
     "https://wtr-lab.com/en/serie-4635/start-with-planetary-governor/chapter-97";
   const allowBiggerLimit: boolean = Boolean(req.body.allowBiggerLimit) || false;
 
-  const orchestrator = new generativeTextOrchestrator(instanceSharedContext);
+  const orchestrator = new generativeTextOrchestrator(instanceSourceWebsite);
   const dataChapter = await orchestrator.computeChapter(url, allowBiggerLimit);
 
   // if there is an error
@@ -43,7 +41,7 @@ router.post("/destination", (req: any, res: any) => {
   const chapterNumber: number = req.body.chapterNumber || false;
   const serieCode: number = req.body.serieCode || false;
   const sourceCode: sourceWebsiteCode = req.body.sourceSiteCode || "WTR_LAB";
-  instanceSharedContext.updateDestination(sourceCode, serieCode, chapterNumber);
+  instanceSourceWebsite.updateDestination(sourceCode, serieCode, chapterNumber);
   return res.sendStatus(200);
 });
 
