@@ -16,4 +16,4 @@ npm run build
 mv /tmp/openaiSecret.json /var/www/mtlParsorAI/build/dist/openaiSecret.json
 
 # Restart PM2 process
-pm2 restart mtlParsorAI
+pm2 restart MtlParsorAI
