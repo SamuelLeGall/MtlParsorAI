@@ -4,6 +4,8 @@
   "type": "module",
   "private": true,
   "scripts": {
+    "build": "tsc &&  node ./build/update-imports.js && node ./build/copy-assets.js",
+    "start": "node ./build/dist/bin/www.js",
     "dev": "tsx watch --include ./views/* ./bin/www.ts"
   },
   "dependencies": {
@@ -28,6 +30,7 @@
     "@types/morgan": "^1.9.9",
     "@types/node": "^22.7.6",
     "connect-livereload": "^0.6.1",
+    "fs-extra": "^11.2.0",
     "livereload": "^0.9.3",
     "tsx": "^4.19.1",
     "typescript": "^5.6.3"

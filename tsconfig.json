@@ -9,8 +9,8 @@
     "forceConsistentCasingInFileNames": true,
     "noEmit": false,
     "resolveJsonModule":true,
-    "outDir": "./dist"
+    "outDir": "./build/dist"
   },
-  "include": [ "app.ts", "routes/**/*", "public/**/*", "models/**/*", "business/**/*", "bin/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "include": [ "app.ts", "routes/**/*","views/**/*", "public/**/*", "models/**/*", "business/**/*", "bin/**/*"],
+  "exclude": ["node_modules", "dist", "build"]
 }
