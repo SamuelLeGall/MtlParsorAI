@@ -66,11 +66,4 @@ export class sourceWebsiteManager {
       };
     }
   }
-
-  getSourceWebsiteConfig(): sourceWebsiteConfig {
-    switch (this.code) {
-      case "WTR_LAB":
-        return configUrlSourceWebsite;
-    }
-  }
 }

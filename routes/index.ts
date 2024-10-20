@@ -1,31 +1,29 @@
 import { Router } from "express";
-import { sourceWebsiteManager } from "../business/sourcesWebsites/sourceWebsiteManager.ts";
 import { generativeTextOrchestrator } from "../business/textProcessing/generativeTextOrchestrator.ts";
 import { sourceWebsiteCode } from "../models/sourceWebsite.ts";
+import { sharedContextManager } from "../business/textProcessing/sharedContextManager.ts";
+import { sharedContextDestinationBase } from "../business/sourcesWebsites/sourceWebsitesData.ts";
 var router = Router();
+const instanceSharedContext = new sharedContextManager(
+  sharedContextDestinationBase
+);
 
 /* GET home page. */
 router.get("/", async function (req: any, res: any, next: any) {
-  const defaultSourceWebsiteCode = "WTR_LAB";
-  const instanceSourceWebsite = new sourceWebsiteManager(
-    defaultSourceWebsiteCode
-  );
-  const config = instanceSourceWebsite.getSourceWebsiteConfig();
   // return the processed chapter
   res.render("index", {
     title: "MtlParsorAI",
-    config,
+    destination: instanceSharedContext.getDestination(),
   });
 });
 
 router.post("/load", async function (req: any, res: any, next: any) {
   const url =
     req.body.url ||
-    "https://wtr-lab.com/en/serie-4635/start-with-planetary-governor/chapter-96";
+    "https://wtr-lab.com/en/serie-4635/start-with-planetary-governor/chapter-97";
   const allowBiggerLimit: boolean = Boolean(req.body.allowBiggerLimit) || false;
-  const sourceCode: sourceWebsiteCode = req.body.sourceSiteCode || "WTR_LAB";
 
-  const orchestrator = new generativeTextOrchestrator(sourceCode);
+  const orchestrator = new generativeTextOrchestrator(instanceSharedContext);
   const dataChapter = await orchestrator.computeChapter(url, allowBiggerLimit);
 
   // if there is an error
@@ -45,9 +43,6 @@ router.post("/destination", (req: any, res: any) => {
   const chapterNumber: number = req.body.chapterNumber || false;
   const serieCode: number = req.body.serieCode || false;
   const sourceCode: sourceWebsiteCode = req.body.sourceSiteCode || "WTR_LAB";
-
-  const orchestrator = new generativeTextOrchestrator(sourceCode);
-  const instanceSharedContext = orchestrator.getSharedContext();
   instanceSharedContext.updateDestination(sourceCode, serieCode, chapterNumber);
   return res.sendStatus(200);
 });

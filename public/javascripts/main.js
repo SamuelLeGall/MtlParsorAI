@@ -39,10 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          url,
-          sourceSiteCode: configUrlSourceWebsite.sourceSiteCode,
-        }),
+        body: JSON.stringify({ url }),
       });
 
       if (!response.ok) {

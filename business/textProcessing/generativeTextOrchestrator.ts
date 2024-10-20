@@ -33,20 +33,15 @@ export class generativeTextOrchestrator {
   private instanceSourceWebsite: sourceWebsiteManager;
   private instanceParsor: chunckParsor;
 
-  constructor(sourceCode: sourceWebsiteCode) {
+  constructor(instanceSharedContext: sharedContextManager) {
     this.instanceRequestManager = new requestManager(
       this.currentChapterSummaryMaxSize,
       this.globalContextSummaryMaxSize
     );
+    this.instanceSharedContext = instanceSharedContext;
+    const sourceCode: sourceWebsiteCode =
+      this.instanceSharedContext.getDestination()?.sourceSiteCode || "WTR_LAB";
     this.instanceSourceWebsite = new sourceWebsiteManager(sourceCode);
-    const sourceWebsiteConfig =
-      this.instanceSourceWebsite.getSourceWebsiteConfig();
-    const destination: sharedContextDestination = {
-      sourceSiteCode: sourceWebsiteConfig.sourceSiteCode,
-      serieCode: sourceWebsiteConfig.serieCode,
-      chapterNumber: sourceWebsiteConfig.chapterNumber,
-    };
-    this.instanceSharedContext = new sharedContextManager(destination);
     this.instanceParsor = new chunckParsor(
       this.maxChunkSize,
       this.overlapSize,

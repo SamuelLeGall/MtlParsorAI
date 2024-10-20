@@ -1,6 +1,6 @@
-import { sourceWebsiteConfig } from "../../models/contexte.ts";
+import { sharedContextDestination } from "../../models/contexte.ts";
 
-export const configUrlSourceWebsite: sourceWebsiteConfig = {
+export const sharedContextDestinationBase: sharedContextDestination = {
   sourceSiteCode: "WTR_LAB",
   serieCode: 4635,
   serieBaseUrl:

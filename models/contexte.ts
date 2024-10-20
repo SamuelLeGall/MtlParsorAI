@@ -8,17 +8,11 @@ export interface sharedContext {
   destination: sharedContextDestination | null;
 }
 
-export interface sourceWebsiteConfig {
+export interface sharedContextDestination {
   sourceSiteCode: sourceWebsiteCode;
   serieCode: number;
   serieBaseUrl: string;
   chapterFragment: string;
-  chapterNumber: number;
-}
-
-export interface sharedContextDestination {
-  sourceSiteCode: sourceWebsiteCode;
-  serieCode: number;
   chapterNumber: number;
 }
 

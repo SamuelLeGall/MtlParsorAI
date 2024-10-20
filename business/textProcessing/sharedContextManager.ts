@@ -23,6 +23,10 @@ export class sharedContextManager {
     return this.sharedContext;
   }
 
+  getDestination(): sharedContextDestination | null {
+    return this.getSharedContext().destination;
+  }
+
   getLastChapterSummary(): string | null {
     return this.getSharedContext().lastChapterSummary;
   }
