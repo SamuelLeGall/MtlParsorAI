@@ -1,4 +1,4 @@
-import { sourceWebsiteCode } from "./sourceWebsite.ts";
+import { sourceWebsiteCode } from "./sourceWebsite";
 
 export interface sharedContext {
   lastChapterSummary: string | null;

@@ -1,7 +1,7 @@
 import axios from "axios";
 import { load } from "cheerio";
-import { sourceWebsiteCode, wtrLabModel } from "../../models/sourceWebsite.ts";
-import { destination } from "../../models/contexte.ts";
+import { sourceWebsiteCode, wtrLabModel } from "../../models/sourceWebsite";
+import { destination } from "../../models/contexte";
 
 export class sourceWebsiteManager {
   private destination: destination;

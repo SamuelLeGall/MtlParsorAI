@@ -1,6 +1,6 @@
-import { openAiMessage, openAiRole } from "../../models/openAi.ts";
-import { openAiDao } from "./openAiDao.ts";
-import { sharedContextManager } from "./sharedContextManager.ts";
+import { openAiMessage, openAiRole } from "../../models/openAi";
+import { openAiDao } from "./openAiDao";
+import { sharedContextManager } from "./sharedContextManager";
 
 export class requestManager {
   private startingMessage: openAiMessage = {

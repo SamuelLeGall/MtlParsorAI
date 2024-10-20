@@ -1,8 +1,9 @@
 import { Router } from "express";
-import { generativeTextOrchestrator } from "../business/textProcessing/generativeTextOrchestrator.ts";
-import { sourceWebsiteCode } from "../models/sourceWebsite.ts";
-import { destinationBase } from "../business/sourcesWebsites/sourceWebsitesData.ts";
-import { sourceWebsiteManager } from "../business/sourcesWebsites/sourceWebsiteManager.ts";
+import { sourceWebsiteManager } from "../business/sourcesWebsites/sourceWebsiteManager";
+import { destinationBase } from "../business/sourcesWebsites/sourceWebsitesData";
+import { generativeTextOrchestrator } from "../business/textProcessing/generativeTextOrchestrator";
+import { sourceWebsiteCode } from "../models/sourceWebsite";
+
 var router = Router();
 const instanceSourceWebsite = new sourceWebsiteManager(destinationBase);
 

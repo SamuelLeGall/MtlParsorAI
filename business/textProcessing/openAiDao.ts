@@ -1,6 +1,6 @@
 import { createRequire } from "module";
 import OpenAI from "openai";
-import { openAiMessage } from "../../models/openAi.ts";
+import { openAiMessage } from "../../models/openAi";
 // Load the JSON file using require because import json file as module is still experimental
 const require = createRequire(import.meta.url);
 const { SECRET_OPENAI_KEY } = require("../../openaiSecret.json");

@@ -8,7 +8,7 @@ import hbs from "hbs";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 
-import indexRouter from "./routes/index.ts";
+import indexRouter from "./routes/index";
 
 // Create a livereload server
 const liveReloadServer = createServer();

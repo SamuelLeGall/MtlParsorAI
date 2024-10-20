@@ -1,9 +1,8 @@
-import { computeChapterResponse } from "../../models/contexte.ts";
-import { sourceWebsiteCode } from "../../models/sourceWebsite.ts";
-import { sourceWebsiteManager } from "../sourcesWebsites/sourceWebsiteManager.ts";
-import { chunckParsor } from "./chunckParsor.ts";
-import { requestManager } from "./requestManager.ts";
-import { sharedContextManager } from "./sharedContextManager.ts";
+import { computeChapterResponse } from "../../models/contexte";
+import { sourceWebsiteManager } from "../sourcesWebsites/sourceWebsiteManager";
+import { chunckParsor } from "./chunckParsor";
+import { requestManager } from "./requestManager";
+import { sharedContextManager } from "./sharedContextManager";
 
 export class generativeTextOrchestrator {
   /*

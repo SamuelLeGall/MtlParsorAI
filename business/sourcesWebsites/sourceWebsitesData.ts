@@ -1,4 +1,4 @@
-import { destination } from "../../models/contexte.ts";
+import { destination } from "../../models/contexte";
 
 export const destinationBase: destination = {
   sourceSiteCode: "WTR_LAB",
