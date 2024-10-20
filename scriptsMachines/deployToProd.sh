@@ -13,4 +13,4 @@ LOCAL_SECRET_FILE="D:\workspace\jsprojects\node\MtlParsorAI\openaiSecret.json"  
 scp $LOCAL_SECRET_FILE $VPS_USER@$VPS_IP:$TEMP_PATH
 
 # SSH into the VPS and run the update script
-ssh $VPS_USER@$VPS_IP 'bash /var/www/mtlParsorAI/update.sh'
+ssh $VPS_USER@$VPS_IP 'bash /var/www/mtlParsorAI/scriptsMachines/update.sh'
