@@ -1,6 +1,6 @@
 body {
   padding: 50px;
-  font: 16px "Lucida Grande", Helvetica, Arial, sans-serif;
+  font: 18px "Lucida Grande", Helvetica, Arial, sans-serif;
   color: rgb(228, 216, 216);
   background-color: rgb(32, 30, 30);
   display: flex;
@@ -9,9 +9,29 @@ body {
   justify-content: center;
 }
 p{
-  line-height: 2em;
+  line-height: 1.5em;
 }
-
+#navigation-under-chapter{
+  display: none;
+}
+.visible {
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.grid-container-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  width: 100%;
+  gap: 10px;
+}
+.grid-container-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  width: 100%;
+  gap: 10px;
+}
 button {
   align-items: center;
   appearance: none;
@@ -43,6 +63,18 @@ button {
   will-change: transform, opacity;
   z-index: 0;
 }
+@media (width < 500px) {
+  button {
+  font-size: 25px;
+  font-weight: 800;
+  height: 50px;
+  padding: 4px 24px;
+  border-radius: 24px;
+  }
+    p {
+      line-height: 3em;
+    }
+} 
 
 button:hover {
   background: #a2a8b2;
@@ -62,3 +94,4 @@ button:focus {
 a {
   color: #00B7FF;
 }
+

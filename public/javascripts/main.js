@@ -7,7 +7,13 @@ import {
 document.addEventListener("DOMContentLoaded", () => {
   // we restore the store from localStorage if it exist on first page load
   checkInitStore();
+  window.showEndChapternavbar = function showEndChapternavbar() {
+    const element = document.getElementById("navigation-under-chapter");
 
+    if (element && !element.classList.contains("visible")) {
+      element.classList.add("visible");
+    }
+  };
   window.loadChapter = async function loadChapter(chapterNumber) {
     try {
       const chapterNumberProcessed =
@@ -26,6 +32,8 @@ document.addEventListener("DOMContentLoaded", () => {
           "chapter " + chapterNumberProcessed + " is in the store",
           chapterStore
         );
+        // we show the navbar under the chapter
+        showEndChapternavbar();
         return chapterStore.data;
       }
 
@@ -34,15 +42,18 @@ document.addEventListener("DOMContentLoaded", () => {
         configUrlSourceWebsite.serieBaseUrl +
         configUrlSourceWebsite.chapterFragment +
         chapterNumberProcessed;
+      const key = document.getElementById("temp-key-input").value;
       const response = await fetch("/load", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ url }),
+        body: JSON.stringify({ url, key }),
       });
 
       if (!response.ok) {
+        document.getElementById("chapter-content").innerHTML =
+          "<p>An error occured</p>";
         throw new Error("Network response was not ok");
       }
 
@@ -55,6 +66,9 @@ document.addEventListener("DOMContentLoaded", () => {
         urlData.chapterNumber = chapterNumberProcessed;
         addChapterToCache(urlData.sourceSiteCode, urlData, chapterHtml);
       }
+
+      // we show the navbar under the chapter
+      showEndChapternavbar();
 
       return chapterHtml;
     } catch (error) {
@@ -105,6 +119,7 @@ document.addEventListener("DOMContentLoaded", () => {
     chapterNumber
   ) {
     try {
+      const key = document.getElementById("temp-key-input").value;
       const response = await fetch("/destination", {
         method: "POST",
         headers: {
@@ -114,10 +129,13 @@ document.addEventListener("DOMContentLoaded", () => {
           sourceCode,
           serieCode,
           chapterNumber,
+          key,
         }),
       });
 
       if (!response.ok) {
+        document.getElementById("chapter-content").innerHTML =
+          "<p>An error occured</p>";
         throw new Error("Network response was not ok");
       }
 

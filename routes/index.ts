@@ -7,6 +7,9 @@ import { sourceWebsiteCode } from "../models/sourceWebsite";
 var router = Router();
 const instanceSourceWebsite = new sourceWebsiteManager(destinationBase);
 
+// temporary solution since the website in now live
+const keyToAccessBack = ":fr6UoOO4b7nrlC07KAlh6y6Na-qawxsVMr8tRHHL";
+
 /* GET home page. */
 router.get("/", async function (req: any, res: any, next: any) {
   // return the processed chapter
@@ -17,6 +20,10 @@ router.get("/", async function (req: any, res: any, next: any) {
 });
 
 router.post("/load", async function (req: any, res: any, next: any) {
+  const key = typeof req.body.key === "string" ? req.body.key.trim() : "";
+  if (key !== keyToAccessBack) {
+    return res.sendStatus(403);
+  }
   const url =
     req.body.url ||
     "https://wtr-lab.com/en/serie-4635/start-with-planetary-governor/chapter-97";
@@ -39,6 +46,10 @@ router.post("/load", async function (req: any, res: any, next: any) {
 });
 
 router.post("/destination", (req: any, res: any) => {
+  const key = typeof req.body.key === "string" ? req.body.key.trim() : "";
+  if (key !== keyToAccessBack) {
+    return res.sendStatus(403);
+  }
   const chapterNumber: number = req.body.chapterNumber || false;
   const serieCode: number = req.body.serieCode || false;
   const sourceCode: sourceWebsiteCode = req.body.sourceSiteCode || "WTR_LAB";

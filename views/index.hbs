@@ -1,10 +1,14 @@
 <h3>Welcomes to {{title}}</h3>
 <div>
-    <input type="number" id="selected-chapter-input" name="number" placeholder="Enter chapter N°" required>
+    <input type="text" id="temp-key-input" placeholder="Enter the key" required>
+    <br><br>
+</div>
+<div>
+    <input type="number" id="selected-chapter-input" placeholder="Enter chapter N°" required>
     <button onclick="showSpecificChapter()">Go</button>
 </div>
 <hr style="width: 100%; margin: 1em 0">
-<div>
+<div class="grid-container-3">
 {{#IsNotFirstChapter destination.chapterNumber}}  
     <button id="prev-chapter" onclick="showPreviousChapter()">Previous</button>
 {{/IsNotFirstChapter}}
@@ -15,6 +19,21 @@
     <!-- This is where the loaded chapter will be inserted -->
     <div id="chapter-content"></div>
 </div>
+<div id="navigation-under-chapter" class="grid-container-2">
+    <hr style="width: 100%; margin: 1em 0">
+    <div>
+        {{#IsNotFirstChapter destination.chapterNumber}}
+        <button id="prev-chapter" onclick="showPreviousChapter()">Previous</button>
+        {{/IsNotFirstChapter}}
+        <button id="next-chapter" onclick="showNextChapter()">Next</button>
+    </div>
+    <div>
+        <input type="number" id="selected-chapter-input" placeholder="Enter chapter N°" required>
+        <button onclick="showSpecificChapter()">Go</button>
+    </div>
+</div>
+
+
 <script>
     // we set some variable front the back
     const configUrlSourceWebsite = {{{json  destination }}};
