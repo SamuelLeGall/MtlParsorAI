@@ -1,4 +1,7 @@
-import { computeChapterResponse } from "../../models/contexte.ts";
+import {
+  computeChapterResponse,
+  sharedContextDestination,
+} from "../../models/contexte.ts";
 import { sourceWebsiteCode } from "../../models/sourceWebsite.ts";
 import { sourceWebsiteManager } from "../sourcesWebsites/sourceWebsiteManager.ts";
 import { chunckParsor } from "./chunckParsor.ts";
@@ -35,13 +38,24 @@ export class generativeTextOrchestrator {
       this.currentChapterSummaryMaxSize,
       this.globalContextSummaryMaxSize
     );
-    this.instanceSharedContext = new sharedContextManager();
     this.instanceSourceWebsite = new sourceWebsiteManager(sourceCode);
+    const sourceWebsiteConfig =
+      this.instanceSourceWebsite.getSourceWebsiteConfig();
+    const destination: sharedContextDestination = {
+      sourceSiteCode: sourceWebsiteConfig.sourceSiteCode,
+      serieCode: sourceWebsiteConfig.serieCode,
+      chapterNumber: sourceWebsiteConfig.chapterNumber,
+    };
+    this.instanceSharedContext = new sharedContextManager(destination);
     this.instanceParsor = new chunckParsor(
       this.maxChunkSize,
       this.overlapSize,
       this.maxSentenceLength
     );
+  }
+
+  getSharedContext(): sharedContextManager {
+    return this.instanceSharedContext;
   }
 
   async computeChapter(

@@ -39,7 +39,10 @@ document.addEventListener("DOMContentLoaded", () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ url }),
+        body: JSON.stringify({
+          url,
+          sourceSiteCode: configUrlSourceWebsite.sourceSiteCode,
+        }),
       });
 
       if (!response.ok) {
@@ -98,6 +101,35 @@ document.addEventListener("DOMContentLoaded", () => {
       return { success: false };
     }
   };
+
+  window.updateDestinationBack = async function updateDestinationBack(
+    sourceCode,
+    serieCode,
+    chapterNumber
+  ) {
+    try {
+      const response = await fetch("/destination", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          sourceCode,
+          serieCode,
+          chapterNumber,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+
+      return true;
+    } catch (error) {
+      console.error("There was a problem with the fetch operation:", error);
+      throw new Error("Error happened");
+    }
+  };
   window.showCurrentChapter = async function showCurrentChapter() {
     document.getElementById("chapter-content").innerHTML = "<p>loading...</p>";
     const response = await loadCurrentChapter(
@@ -132,6 +164,13 @@ document.addEventListener("DOMContentLoaded", () => {
     // we update the current chapterNumber
     configUrlSourceWebsite.chapterNumber -= 1;
 
+    // we tell the backend that we changed chapter (necessary because of the cached chapter)
+    updateDestinationBack(
+      configUrlSourceWebsite.sourceSiteCode,
+      configUrlSourceWebsite.serieCode,
+      configUrlSourceWebsite.chapterNumber
+    );
+
     // load 2 chapter before ( because we just updated the chapter number)
     await loadPreviousChapter(configUrlSourceWebsite.chapterNumber);
 
@@ -152,6 +191,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // we update the current chapterNumber
     configUrlSourceWebsite.chapterNumber += 1;
+
+    // we tell the backend that we changed chapter (necessary because of the cached chapter)
+    updateDestinationBack(
+      configUrlSourceWebsite.sourceSiteCode,
+      configUrlSourceWebsite.serieCode,
+      configUrlSourceWebsite.chapterNumber
+    );
 
     // load 2 chapter after ( because we just updated the chapter number)
     await loadNextChapter(configUrlSourceWebsite.chapterNumber);
@@ -174,6 +220,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // we update the current chapterNumber
     configUrlSourceWebsite.chapterNumber = chapterNumberToLoad;
+
+    // we tell the backend that we changed chapter (necessary because of the cached chapter)
+    updateDestinationBack(
+      configUrlSourceWebsite.sourceSiteCode,
+      configUrlSourceWebsite.serieCode,
+      configUrlSourceWebsite.chapterNumber
+    );
 
     // load next chapter first because more likely it's going to be visited instead of the previous one
     await loadNextChapter(chapterNumberToLoad);

@@ -2,6 +2,7 @@ import axios from "axios";
 import { load } from "cheerio";
 import { sourceWebsiteCode, wtrLabModel } from "../../models/sourceWebsite.ts";
 import { configUrlSourceWebsite } from "./sourceWebsitesData.ts";
+import { sourceWebsiteConfig } from "../../models/contexte.ts";
 
 export class sourceWebsiteManager {
   private code: sourceWebsiteCode;
@@ -66,7 +67,7 @@ export class sourceWebsiteManager {
     }
   }
 
-  getSourceWebsiteConfig() {
+  getSourceWebsiteConfig(): sourceWebsiteConfig {
     switch (this.code) {
       case "WTR_LAB":
         return configUrlSourceWebsite;

@@ -1,8 +1,25 @@
+import { sourceWebsiteCode } from "./sourceWebsite.ts";
+
 export interface sharedContext {
   lastChapterSummary: string | null;
   currentChapterSummary: string | null;
   globalContext: string | null;
   currentChapterText: string | null;
+  destination: sharedContextDestination | null;
+}
+
+export interface sourceWebsiteConfig {
+  sourceSiteCode: sourceWebsiteCode;
+  serieCode: number;
+  serieBaseUrl: string;
+  chapterFragment: string;
+  chapterNumber: number;
+}
+
+export interface sharedContextDestination {
+  sourceSiteCode: sourceWebsiteCode;
+  serieCode: number;
+  chapterNumber: number;
 }
 
 export type computeChapterResponse = Promise<

@@ -1,4 +1,6 @@
-export const configUrlSourceWebsite = {
+import { sourceWebsiteConfig } from "../../models/contexte.ts";
+
+export const configUrlSourceWebsite: sourceWebsiteConfig = {
   sourceSiteCode: "WTR_LAB",
   serieCode: 4635,
   serieBaseUrl:
