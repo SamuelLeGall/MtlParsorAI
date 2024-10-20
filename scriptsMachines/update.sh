@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # executed on the vps machine
+cd /var/www/mtlParsorAI
 
 # Pull the latest changes
 git pull origin main
