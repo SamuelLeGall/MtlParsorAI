@@ -2,5 +2,9 @@
 <p>{{errorAI}}</p>
 <hr>
 {{#if detail}}
-<p>{{ detail.chunks}}</p>
+<p>{{{ detail.chunks}}}</p>
+    {{#if detail.allowBiggerLimit}}
+        <button id="load-chapter-bigger" onclick="showCurrentChapter(true)">Try again</button>
+    {{/if}}
 {{/if}}
+

@@ -75,12 +75,12 @@ export class requestManager {
         "user",
         `Please review the following chapter chunk and rewrite the sentences where necessary to improve readability and clarity. Focus on fixing grammatical errors, awkward phrasing, or sentence structure issues while preserving the author's original style and tone. 
         **Instructions:**
-        - Provide only the revised version of the chapter, formatted as valid HTML with each paragraph enclosed in <p> tags.
-        - For spoken dialogue, enclose the quoted parts inside <span> tags.
+        - Provide only the revised version of the chapter, formatted as valid HTML with each paragraph enclosed in <p> tags. Prioritize multiples small paragraphs over big ones.
+        - For spoken dialogue, enclose the quoted parts inside <span> tags. The <span> tag must be on a new ligne in a separate <p> tag. The only text allow with the spoken dialogue is the speach description that usually follow the dialoge. Example : <p><span>"Hello son"</span> mom said to me while looking at me working in the garden"</p>.
         - Do not add any explanations, introductions, or conclusions before or after the text.
-        - Ignore any text within <PREV_CHUNCK_OVERLAP> tags.
-        - Do not rewrite or include the last incomplete sentence of the chunk if it exists. 
-        - If the content inside <PREV_CHUNCK_OVERLAP> is not included in the previous chunk, you may use it for context only. 
+        - Do not rewrite or use the text inside <PREV_CHUNCK_OVERLAP> tags. It should only be used to give you context.
+        - Do not rewrite or include the last incomplete sentence of the chunk if it exists.
+        - Any stats dump (between []) should be formatted on different line to make a game like visual that easy to read.
 
         The chapter chunk: ${chunk}`
       )

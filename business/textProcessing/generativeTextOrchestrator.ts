@@ -67,7 +67,7 @@ export class generativeTextOrchestrator {
           `Error will require too many chunks to process - source chapter length is around :` +
           sourceObject.data.body.length,
         detail: {
-          chunks: "here is the url used to eventually do it anyway" + url,
+          chunks: `here is the source url used. If it seems okay, you can try again using the button below that allow bigger chapter <br/><a href="${url}" target="_blank">${url}</a>`,
           allowBiggerLimit: true,
         },
       };

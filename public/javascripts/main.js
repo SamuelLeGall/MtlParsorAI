@@ -14,7 +14,10 @@ document.addEventListener("DOMContentLoaded", () => {
       element.classList.add("visible");
     }
   };
-  window.loadChapter = async function loadChapter(chapterNumber) {
+  window.loadChapter = async function loadChapter(
+    chapterNumber,
+    allowBiggerLimit = false
+  ) {
     try {
       const chapterNumberProcessed =
         chapterNumber ?? configUrlSourceWebsite.chapterNumber;
@@ -43,12 +46,16 @@ document.addEventListener("DOMContentLoaded", () => {
         configUrlSourceWebsite.chapterFragment +
         chapterNumberProcessed;
       const key = document.getElementById("temp-key-input").value;
+      let body = { url, key };
+      if (allowBiggerLimit) {
+        body = { ...body, allowBiggerLimit: true };
+      }
       const response = await fetch("/load", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ url, key }),
+        body: JSON.stringify(body),
       });
 
       if (!response.ok) {
@@ -93,10 +100,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
   window.loadCurrentChapter = async function loadCurrentChapter(
-    currentChapterNumber
+    currentChapterNumber,
+    allowBiggerLimit = false
   ) {
     try {
-      const chapterData = await loadChapter(currentChapterNumber);
+      const chapterData = await loadChapter(
+        currentChapterNumber,
+        allowBiggerLimit
+      );
       return { success: true, chapterData };
     } catch (e) {
       return { success: false };
@@ -145,15 +156,19 @@ document.addEventListener("DOMContentLoaded", () => {
       throw new Error("Error happened");
     }
   };
-  window.showCurrentChapter = async function showCurrentChapter() {
+  window.showCurrentChapter = async function showCurrentChapter(
+    allowBiggerLimit = false
+  ) {
     document.getElementById("chapter-content").innerHTML = "<p>loading...</p>";
     const response = await loadCurrentChapter(
-      configUrlSourceWebsite.chapterNumber
+      configUrlSourceWebsite.chapterNumber,
+      allowBiggerLimit
     );
     if (!response.success) {
       return;
     }
     document.getElementById("chapter-content").innerHTML = response.chapterData; // Update the chapter content
+    scrollTo({ behavior: "smooth", top: 0 });
 
     await Promise.all([
       // load next chapter first because more likely it's going to be visited instead of the previous one
@@ -177,6 +192,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
     document.getElementById("chapter-content").innerHTML = response.chapterData; // Update the chapter content
+    scrollTo({ behavior: "smooth", top: 0 });
 
     // we update the current chapterNumber
     configUrlSourceWebsite.chapterNumber -= 1;
@@ -207,6 +223,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
     document.getElementById("chapter-content").innerHTML = response.chapterData; // Update the chapter content
+    scrollTo({ behavior: "smooth", top: 0 });
 
     // we update the current chapterNumber
     configUrlSourceWebsite.chapterNumber += 1;
@@ -238,6 +255,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
     document.getElementById("chapter-content").innerHTML = response.chapterData; // Update the chapter content
+    scrollTo({ behavior: "smooth", top: 0 });
 
     // we update the current chapterNumber
     configUrlSourceWebsite.chapterNumber = chapterNumberToLoad;
