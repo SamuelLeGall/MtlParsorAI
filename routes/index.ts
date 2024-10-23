@@ -26,7 +26,7 @@ router.post("/load", async function (req: any, res: any, next: any) {
   }
   const url =
     req.body.url ||
-    "https://wtr-lab.com/en/serie-4635/start-with-planetary-governor/chapter-97";
+    "https://wtr-lab.com/en/serie-4635/start-with-planetary-governor/chapter-132";
   const allowBiggerLimit: boolean = Boolean(req.body.allowBiggerLimit) || false;
 
   const orchestrator = new generativeTextOrchestrator(instanceSourceWebsite);
