@@ -170,13 +170,15 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("chapter-content").innerHTML = response.chapterData; // Update the chapter content
     scrollTo({ behavior: "smooth", top: 0 });
 
-    await Promise.all([
-      // load next chapter first because more likely it's going to be visited instead of the previous one
-      loadNextChapter(configUrlSourceWebsite.chapterNumber),
+    if (!allowBiggerLimit) {
+      await Promise.all([
+        // load next chapter first because more likely it's going to be visited instead of the previous one
+        loadNextChapter(configUrlSourceWebsite.chapterNumber),
 
-      // load previous chapter
-      loadPreviousChapter(configUrlSourceWebsite.chapterNumber),
-    ]);
+        // load previous chapter
+        loadPreviousChapter(configUrlSourceWebsite.chapterNumber),
+      ]);
+    }
 
     // we save the store into localStorage
     saveStoreToLocalStorage();

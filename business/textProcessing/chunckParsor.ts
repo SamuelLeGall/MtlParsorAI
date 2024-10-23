@@ -53,8 +53,7 @@ export class chunckParsor {
 
         //we keep the overlapSize last sentences
         currentChunk = currentChunk.slice(-this.overlapSize);
-        currentChunk.unshift("<PREV_CHUNCK_OVERLAP>");
-        currentChunk.push("</PREV_CHUNCK_OVERLAP>");
+        currentChunk.push("<END_PREV_CHUNCK_OVERLAP>");
       }
     }
 

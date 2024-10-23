@@ -31,6 +31,7 @@ export class requestManager {
     chunk: string,
     instanceSharedContext: sharedContextManager
   ) {
+    let currentChunk = chunk;
     const messages = [
       this.startingMessage,
       this.createMessage(
@@ -69,20 +70,30 @@ export class requestManager {
       );
     }
 
+    if (chunk.includes("<END_PREV_CHUNCK_OVERLAP>")) {
+      const [overlap, current] = chunk.split("<END_PREV_CHUNCK_OVERLAP>");
+      currentChunk = current;
+      messages.push(
+        this.createMessage(
+          "user",
+          "Here is the last few sentences of the last chunk you already reworked. Use it if you think the first sentences of your new chunk are missing parts." +
+            overlap
+        )
+      );
+    }
     // Include the current chunk
     messages.push(
       this.createMessage(
         "user",
         `Please review the following chapter chunk and rewrite the sentences where necessary to improve readability and clarity. Focus on fixing grammatical errors, awkward phrasing, or sentence structure issues while preserving the author's original style and tone. 
         **Instructions:**
-        - Provide only the revised version of the chapter, formatted as valid HTML with each paragraph enclosed in <p> tags. Prioritize multiples small paragraphs over big ones.
+        - Provide only the revised version of the chapter, formatted as valid HTML with each paragraph enclosed in <p> tags. Most paragraphes must contains between 1 and 3 sentences.
         - For spoken dialogue, enclose the quoted parts inside <span> tags. The <span> tag must be on a new ligne in a separate <p> tag. The only text allow with the spoken dialogue is the speach description that usually follow the dialoge. Example : <p><span>"Hello son"</span> mom said to me while looking at me working in the garden"</p>.
         - Do not add any explanations, introductions, or conclusions before or after the text.
-        - Do not rewrite or use the text inside <PREV_CHUNCK_OVERLAP> tags. It should only be used to give you context.
         - Do not rewrite or include the last incomplete sentence of the chunk if it exists.
         - Any stats dump (between []) should be formatted on different line to make a game like visual that easy to read.
 
-        The chapter chunk: ${chunk}`
+        The chapter chunk: ${currentChunk}`
       )
     );
 
