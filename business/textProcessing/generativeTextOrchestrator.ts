@@ -82,12 +82,23 @@ export class generativeTextOrchestrator {
     );
 
     // we expect a chapter to be around 8000 words (but i've seen some at 40K...) and generate around 2 to 3 chuncks so if more that 5 there is an issue we dont do the api calls
-    if ((chunks.length > 5 && !allowBiggerLimit) || chunks.length > 15) {
+
+    if (chunks.length > 15) {
+      return {
+        success: false,
+        message: `Error too many chunks to process even with bigger limit. (count:${chunks.length}) -  source chapter length is around ${sourceObject.data.body.length}. Here is the url : ${url} . Here is the base text:`,
+        detail: {
+          chunks,
+        },
+      };
+    }
+    if (chunks.length > 5 && !allowBiggerLimit) {
       return {
         success: false,
         message: `Error too many chunks to process. (count:${chunks.length}) -  source chapter length is around ${sourceObject.data.body.length}`,
         detail: {
-          chunks,
+          chunks: `here is the source url used. If it seems okay, you can try again using the button below that allow bigger chapter <br/><a href="${url}" target="_blank">${url}</a>`,
+          allowBiggerLimit: true,
         },
       };
     }
