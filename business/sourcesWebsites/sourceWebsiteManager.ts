@@ -1,27 +1,35 @@
 import axios from "axios";
 import { load } from "cheerio";
-import { sourceWebsiteCode, wtrLabModel } from "../../models/sourceWebsite";
+import { sourceWebsitesSelect, wtrLabModel } from "../../models/sourceWebsite";
 import { destination } from "../../models/contexte";
 
 export class sourceWebsiteManager {
-  private destination: destination;
+  private destinations: destination[];
+  private configSourceWebsite: sourceWebsitesSelect[];
 
-  constructor(destination: destination) {
-    this.destination = destination;
+  constructor(
+    destination: destination,
+    configSourceWebsite: sourceWebsitesSelect[]
+  ) {
+    this.destinations = [destination];
+    this.configSourceWebsite = configSourceWebsite;
   }
 
-  getDestination(): destination {
-    return this.destination;
+  getSourceWebsites(): sourceWebsitesSelect[] {
+    return this.configSourceWebsite;
   }
 
-  updateDestination(
-    sourceSiteCode: sourceWebsiteCode,
-    serieCode: number,
-    chapterNumber: number
-  ): void {
-    this.destination.sourceSiteCode = sourceSiteCode;
-    this.destination.serieCode = serieCode;
-    this.destination.chapterNumber = chapterNumber;
+  getDestination(userId: string): destination | undefined {
+    return this.destinations.find(
+      (destination) => destination.userId === userId
+    );
+  }
+
+  updateDestination(destination: destination): void {
+    const index = this.destinations.findIndex(
+      (destination) => destination.userId === destination.userId
+    );
+    this.destinations[index] = destination;
   }
 
   private async fetchUrlHTML(url: string) {
@@ -37,8 +45,20 @@ export class sourceWebsiteManager {
     }
   }
 
-  async fetchChapterText(url: string) {
+  private buildUrl(destination: destination): string {
+    let url = destination.urlParam;
+    destination.params.forEach((param) => {
+      if (param.code && destination.urlParam.includes(`<${param.code}>`)) {
+        url = url.replace(`<${param.code}>`, param.value.toString());
+      }
+    });
+    return url;
+  }
+
+  async fetchChapterText(destination: destination) {
     try {
+      const url = this.buildUrl(destination);
+      console.log(`url is ${url}`);
       const response = await this.fetchUrlHTML(url);
 
       // Load the HTML into cheerio
@@ -53,7 +73,14 @@ export class sourceWebsiteManager {
       let scriptContent: wtrLabModel | null = null;
 
       // mapping to get title and libelle depending on the source website
-      switch (this.destination.sourceSiteCode) {
+      switch (destination.sourceSiteCode) {
+        case "FAN_MTL":
+          console.log("source is fanmtl.com");
+          chapterData.title =
+            $(".chapter-header .content-wrap .titles h2").text() || "";
+
+          chapterData.body = $(".chapter-content").html() || "";
+          break;
         case "WTR_LAB":
         default:
           console.log("source is wtr-lab");

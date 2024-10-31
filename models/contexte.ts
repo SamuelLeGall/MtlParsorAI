@@ -8,13 +8,14 @@ export interface sharedContext {
 }
 
 export interface destination {
+  userId: string;
   sourceSiteCode: sourceWebsiteCode;
-  serieCode: number;
-  serieBaseUrl: string;
-  chapterFragment: string;
-  chapterNumber: number;
+  urlParam: string;
+  params: {
+    code: string;
+    value: string | number;
+  }[];
 }
-
 export type computeChapterResponse = Promise<
   | {
       success: true;

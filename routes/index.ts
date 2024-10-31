@@ -1,11 +1,17 @@
 import { Router } from "express";
 import { sourceWebsiteManager } from "../business/sourcesWebsites/sourceWebsiteManager";
-import { destinationBase } from "../business/sourcesWebsites/sourceWebsitesData";
+import {
+  destinationBase,
+  sourcesWebsites,
+} from "../business/sourcesWebsites/sourceWebsitesData";
 import { generativeTextOrchestrator } from "../business/textProcessing/generativeTextOrchestrator";
-import { sourceWebsiteCode } from "../models/sourceWebsite";
+import { destination } from "../models/contexte";
 
 var router = Router();
-const instanceSourceWebsite = new sourceWebsiteManager(destinationBase);
+const instanceSourceWebsite = new sourceWebsiteManager(
+  destinationBase,
+  sourcesWebsites
+);
 
 // temporary solution since the website in now live
 const keyToAccessBack = ":fr6UoOO4b7nrlC07KAlh6y6Na-qawxsVMr8tRHHL";
@@ -15,7 +21,16 @@ router.get("/", async function (req: any, res: any, next: any) {
   // return the processed chapter
   res.render("index", {
     title: "MtlParsorAI",
-    destination: instanceSourceWebsite.getDestination(),
+    destination: instanceSourceWebsite.getDestination("default"),
+    sitesSources: instanceSourceWebsite.getSourceWebsites(),
+  });
+});
+
+router.get("/bookmark", async function (req: any, res: any, next: any) {
+  // return the processed chapter
+  res.render("bookmark", {
+    title: "MtlParsorAI - Saved books",
+    destination: instanceSourceWebsite.getDestination("default"),
   });
 });
 
@@ -24,13 +39,14 @@ router.post("/load", async function (req: any, res: any, next: any) {
   if (key !== keyToAccessBack) {
     return res.sendStatus(403);
   }
-  const url =
-    req.body.url ||
-    "https://wtr-lab.com/en/serie-4635/start-with-planetary-governor/chapter-132";
+  const destination = req.body.destination || destinationBase;
   const allowBiggerLimit: boolean = Boolean(req.body.allowBiggerLimit) || false;
 
   const orchestrator = new generativeTextOrchestrator(instanceSourceWebsite);
-  const dataChapter = await orchestrator.computeChapter(url, allowBiggerLimit);
+  const dataChapter = await orchestrator.computeChapter(
+    destination,
+    allowBiggerLimit
+  );
 
   // if there is an error
   if (!dataChapter.success) {
@@ -50,10 +66,9 @@ router.post("/destination", (req: any, res: any) => {
   if (key !== keyToAccessBack) {
     return res.sendStatus(403);
   }
-  const chapterNumber: number = req.body.chapterNumber || false;
-  const serieCode: number = req.body.serieCode || false;
-  const sourceCode: sourceWebsiteCode = req.body.sourceSiteCode || "WTR_LAB";
-  instanceSourceWebsite.updateDestination(sourceCode, serieCode, chapterNumber);
+  const newDestination: destination =
+    req.body.newConfigDestination || destinationBase;
+  instanceSourceWebsite.updateDestination(newDestination);
   return res.sendStatus(200);
 });
 

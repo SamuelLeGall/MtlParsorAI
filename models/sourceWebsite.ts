@@ -13,4 +13,9 @@ export interface wtrLabModel {
   };
 }
 
-export type sourceWebsiteCode = "WTR_LAB";
+export type sourceWebsiteCode = "WTR_LAB" | "FAN_MTL";
+
+export interface sourceWebsitesSelect {
+  code: sourceWebsiteCode;
+  libelle: string;
+}

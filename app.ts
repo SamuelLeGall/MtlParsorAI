@@ -9,6 +9,7 @@ import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 
 import indexRouter from "./routes/index";
+import { destination } from "./models/contexte";
 
 // Create a livereload server
 const liveReloadServer = createServer();
@@ -33,17 +34,21 @@ hbs.registerHelper("json", (context: any) => {
 hbs.registerHelper(
   "IsNotFirstChapter",
   (
-    aString: string,
+    destination: destination,
     options: {
       fn: (context: any) => any;
       inverse: (context: any) => any;
     }
   ) => {
-    const value = parseInt(aString);
-    if (Number.isNaN(value)) {
+    let chapterNumber =
+      destination.params.find((el) => el.code === "CHAPTER_NUMBER")?.value ?? 0;
+    if (typeof chapterNumber === "string") {
+      chapterNumber = parseInt(chapterNumber);
+    }
+    if (Number.isNaN(chapterNumber)) {
       return options.inverse(this);
     }
-    return value > 1 ? options.fn(this) : options.inverse(this);
+    return chapterNumber > 1 ? options.fn(this) : options.inverse(this);
   }
 );
 

@@ -1,4 +1,4 @@
-import { computeChapterResponse } from "../../models/contexte";
+import { computeChapterResponse, destination } from "../../models/contexte";
 import { sourceWebsiteManager } from "../sourcesWebsites/sourceWebsiteManager";
 import { chunckParsor } from "./chunckParsor";
 import { requestManager } from "./requestManager";
@@ -48,15 +48,17 @@ export class generativeTextOrchestrator {
   }
 
   async computeChapter(
-    url: string,
+    destination: destination,
     allowBiggerLimit?: boolean
   ): computeChapterResponse {
     // first we fetch the actual mth text from a specified website
-    const sourceObject = await this.instanceSourceWebsite.fetchChapterText(url);
+    const sourceObject = await this.instanceSourceWebsite.fetchChapterText(
+      destination
+    );
     if (!sourceObject?.data?.body) {
       return {
         success: false,
-        message: `Error While fetching the chapter - Does the chapter exist ? - ${url}`,
+        message: `Error While fetching the chapter - Does the chapter exist ? - ${destination}`,
       };
     }
 

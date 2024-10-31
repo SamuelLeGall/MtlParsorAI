@@ -11,14 +11,16 @@ body {
 p{
   line-height: 1.5em;
 }
-#navigation-under-chapter{
-  display: none;
-}
-.visible {
-  display: flex !important;
+#navigation-under-chapter.visible{
   flex-direction: column;
   align-items: center;
   justify-content: center;
+}
+.visible {
+  display: flex !important;
+}
+.hidden {
+  display: none !important;
 }
 .grid-container-3 {
   display: grid;
@@ -95,3 +97,13 @@ a {
   color: #00B7FF;
 }
 
+.flex-column {
+  display: flex;
+  flex-direction: column;
+}
+.gap-half-em{
+  gap: 0.5em;
+}
+input,select{
+  width: fit-content;
+}

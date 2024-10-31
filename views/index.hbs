@@ -1,15 +1,50 @@
 <h3>Welcomes to {{title}}</h3>
 <div>
-    <input type="text" id="temp-key-input" placeholder="Enter the key" required>
-    <br><br>
+    <a href="/bookmark">My library</a>
 </div>
+<hr style="width: 100%; margin: 1em 0">
+<div>
+    <div class="grid-container-2">
+        <h4>Reader Configuration</h4>
+        <button onclick="toggleElementVisibility('config-container')" style="width: fit-content;">Toggle</button>
+    </div>
+
+    <div id="config-container" class="grid-container-2 hidden">
+        <div class="flex-column gap-half-em">
+            <label>Please enter the security key </label>
+            <input type="text" id="temp-key-input" required>
+
+            <label>Please Choose the source website </label>
+            <select id="site-source-select">
+                {{#each sitesSources}}
+                    <option value="{{this.code}}">{{this.libelle}}</option>
+                {{/each}}
+            </select>
+            
+            <label>Please correct the path template if necessary </label>
+            <input type="text" id="path-template-input" value="{{destination.urlParam}}">
+            <button onclick="saveConfigAndIdentity()" style="width: fit-content;">
+                Save
+            </button>
+        </div>
+        <div class="flex-column gap-half-em">
+            <label>Please enter the the serie number/url-name (arc-of-gunfire or 4635/start-with-planetary-governor ) </label>
+            <input type="text" id="serie-input" placeholder="Enter the key" value="{{destination.serieBaseUrl}}">
+
+            <label>Please enter chapter Number </label>
+            <input type="text" id="config-chapter-number-input" placeholder="Enter the key">
+
+        </div>
+    </div>
+</div>
+<hr style="width: 100%; margin: 1em 0">
 <div>
     <input type="number" id="selected-chapter-input" placeholder="Enter chapter N°" required>
     <button onclick="showSpecificChapter()">Go</button>
 </div>
 <hr style="width: 100%; margin: 1em 0">
 <div class="grid-container-3">
-{{#IsNotFirstChapter destination.chapterNumber}}  
+{{#IsNotFirstChapter destination}}  
     <button id="prev-chapter" onclick="showPreviousChapter()">Previous</button>
 {{/IsNotFirstChapter}}
 <button id="load-chapter" onclick="showCurrentChapter()">Load Chapter</button>
@@ -19,10 +54,10 @@
     <!-- This is where the loaded chapter will be inserted -->
     <div id="chapter-content"></div>
 </div>
-<div id="navigation-under-chapter" class="grid-container-2">
+<div id="navigation-under-chapter" class="grid-container-2 hidden">
     <hr style="width: 100%; margin: 1em 0">
     <div>
-        {{#IsNotFirstChapter destination.chapterNumber}}
+        {{#IsNotFirstChapter destination}}
         <button id="prev-chapter" onclick="showPreviousChapter()">Previous</button>
         {{/IsNotFirstChapter}}
         <button id="next-chapter" onclick="showNextChapter()">Next</button>
@@ -36,5 +71,5 @@
 
 <script>
     // we set some variable front the back
-    const configUrlSourceWebsite = {{{json  destination }}};
+    let destination = {{{json  destination }}};
 </script>
