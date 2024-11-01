@@ -69,7 +69,7 @@ export class generativeTextOrchestrator {
           `Error will require too many chunks to process - source chapter length is around :` +
           sourceObject.data.body.length,
         detail: {
-          chunks: `here is the source url used. If it seems okay, you can try again using the button below that allow bigger chapter <br/><a href="${url}" target="_blank">${url}</a>`,
+          chunks: `here is the source url used. If it seems okay, you can try again using the button below that allow bigger chapter <br/><a href="${sourceObject.url}" target="_blank">${sourceObject.url}</a>`,
           allowBiggerLimit: true,
         },
       };
@@ -88,7 +88,7 @@ export class generativeTextOrchestrator {
     if (chunks.length > 15) {
       return {
         success: false,
-        message: `Error too many chunks to process even with bigger limit. (count:${chunks.length}) -  source chapter length is around ${sourceObject.data.body.length}. Here is the url : ${url} . Here is the base text:`,
+        message: `Error too many chunks to process even with bigger limit. (count:${chunks.length}) -  source chapter length is around ${sourceObject.data.body.length}. Here is the url : ${sourceObject.url} . Here is the base text:`,
         detail: {
           chunks,
         },
@@ -99,7 +99,7 @@ export class generativeTextOrchestrator {
         success: false,
         message: `Error too many chunks to process. (count:${chunks.length}) -  source chapter length is around ${sourceObject.data.body.length}`,
         detail: {
-          chunks: `here is the source url used. If it seems okay, you can try again using the button below that allow bigger chapter <br/><a href="${url}" target="_blank">${url}</a>`,
+          chunks: `here is the source url used. If it seems okay, you can try again using the button below that allow bigger chapter <br/><a href="${sourceObject.url}" target="_blank">${sourceObject.url}</a>`,
           allowBiggerLimit: true,
         },
       };

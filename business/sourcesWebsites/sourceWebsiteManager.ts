@@ -56,8 +56,9 @@ export class sourceWebsiteManager {
   }
 
   async fetchChapterText(destination: destination) {
+    let url = "";
     try {
-      const url = this.buildUrl(destination);
+      url = this.buildUrl(destination);
       console.log(`url is ${url}`);
       const response = await this.fetchUrlHTML(url);
 
@@ -97,12 +98,13 @@ export class sourceWebsiteManager {
           break;
       }
 
-      return { sucess: true, data: chapterData };
+      return { sucess: true, data: chapterData, url };
     } catch (error: any) {
       console.error(error);
       return {
         success: false,
         message: error.message || JSON.stringify(error),
+        url,
       };
     }
   }
