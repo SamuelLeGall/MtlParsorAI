@@ -85,13 +85,15 @@ export class requestManager {
     messages.push(
       this.createMessage(
         "user",
-        `Please review the following chapter chunk and rewrite the sentences where necessary to improve readability and clarity. Focus on fixing grammatical errors, awkward phrasing, or sentence structure issues while preserving the author's original style and tone. 
+        `Please review the following chapter chunk and rewrite sentences where necessary to improve readability and clarity. Focus on fixing grammatical errors, awkward phrasing, and sentence structure while preserving the author's original style and tone. 
         **Instructions:**
-        - Provide only the revised version of the chapter, formatted as valid HTML with each paragraph enclosed in <p> tags. Most paragraphes must contains between 1 and 2 sentences.
-        - For spoken dialogue, enclose the quoted parts inside <span> tags. The <span> tag must be on a new ligne in a separate <p> tag. The only text allow with the spoken dialogue is the speach description that usually follow the dialoge. Example : <p><span>"Hello son"</span> mom said to me while looking at me working in the garden"</p>.
-        - Do not add any explanations, introductions, or conclusions before or after the text.
-        - Do not rewrite or include the last incomplete sentence of the chunk if it exists.
-        - Any stats dump (between []) should be formatted on different line to make a game like visual that easy to read.
+        - Provide only the revised version of the chapter, formatted as valid HTML with each paragraph enclosed in <p> tags. Most paragraphs should contain 1-2 sentences.
+        - For spoken dialogue, enclose the quoted parts inside <span> tags, with each <span> tag on a new line within a separate <p> tag. Include only the spoken dialogue and any accompanying dialogue tags or descriptions. Example: <p><span>"Hello, son"</span> mom said to me while watching me work in the garden.</p>.
+        - Ensure strict consistency with character pronouns (e.g., he/she/him/her) as designated in previous parts of the text. Verify each character’s pronoun usage for accuracy and do not switch pronouns for the same character.
+        - Preserve any specified ranks or titles consistently throughout the text. For example, if a character is introduced as "General," retain this title without variation (except if he is promoted during the chunk obviously).
+        - Do not add explanations, introductions, or conclusions before or after the text.
+        - If the last sentence of the chunk is incomplete, do not rewrite or include it.
+        - For any stats or data sections (e.g., items in [brackets]), place each item on a separate line for a clear, game-like display.
 
         The chapter chunk: ${currentChunk}`
       )
