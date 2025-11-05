@@ -12,7 +12,9 @@ import indexRouter from "./routes/index";
 import { destination } from "./models/contexte";
 
 // Create a livereload server
-const liveReloadServer = createServer();
+const liveReloadServer = createServer({
+  exts: ["hbs", "html", "css", "js", "png", "jpg"],
+});
 // Watch for changes in views and public directories
 
 // Get __filename and __dirname in ES modules
