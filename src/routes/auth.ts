@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
 import router from "./index";
 import { Authentification } from "../business/auth/Authentification";
 import { ResultFactory } from "../models/response";
@@ -16,16 +15,17 @@ router.get("/create", async function (req, res) {
   });
 });
 
-// @ts-ignore
+
 router.post("/login", async function (req, res) {
   const instance = new Authentification();
   const result = await instance.login(req.body.username, req.body.password);
   if (ResultFactory.isError(result)) {
     const [, errorLogin] = result;
     errorLogin.logToConsole();
-    return res
+    res
       .status(errorLogin.code === "UNEXPECTED_ERROR" ? 500 : 403)
       .send(errorLogin.getPublicMessage());
+    return;
   }
 
   const [data] = result;
@@ -45,24 +45,26 @@ router.post("/login", async function (req, res) {
     maxAge: 24 * 60 * 60 * 1000,
     path: "/",
   });
-  return res.status(200).send({
+  res.status(200).send({
     success: true,
     userID: data.userID,
   });
+  return;
 });
 
-// @ts-ignore
 router.post("/create", async function (req, res) {
   const instance = new Authentification();
   const result = await instance.create(req.body.username, req.body.password);
   if (ResultFactory.isError(result)) {
     const [, errorCreate] = result;
     errorCreate.logToConsole();
-    return res
+    res
       .status(errorCreate.code === "UNEXPECTED_ERROR" ? 500 : 403)
       .send(errorCreate.getPublicMessage());
+    return;
   }
 
-  return res.sendStatus(201);
+  res.sendStatus(201);
+  return;
 });
 export default router;

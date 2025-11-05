@@ -2,15 +2,15 @@
   "compilerOptions": {
     "target": "ES2022",
     "module": "ES2022",
-    "moduleResolution": "bundler", 
+    "moduleResolution": "node",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "noEmit": false,
     "resolveJsonModule":true,
-    "outDir": "./build/dist"
+    "outDir": "./dist"
   },
-  "include": [ "app.ts", "routes/**/*","views/**/*", "public/**/*", "models/**/*", "business/**/*", "bin/**/*"],
+  "include": ["src/**/*", "bin/**/*"],
   "exclude": ["node_modules", "dist", "build"]
 }

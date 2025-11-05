@@ -1,7 +1,6 @@
 import { UserDB } from "../../models/users";
 import * as crypto from "node:crypto";
-import { RedisClient } from "../../infrastructure/database/redisClient";
-
+import {RedisClient} from "../../infrastructure/database/redisClient";
 export class UsersRepository {
   private db;
 

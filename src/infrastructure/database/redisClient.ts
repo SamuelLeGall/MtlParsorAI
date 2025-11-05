@@ -1,5 +1,5 @@
 import { createClient, RedisClientType } from "redis";
-import { UserDB } from "../../models/users";
+import {UserDB} from "../../models/users";
 
 export class RedisClient {
   private static instance: RedisClient;

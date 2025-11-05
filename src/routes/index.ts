@@ -15,7 +15,7 @@ const instanceSourceWebsite = new sourceWebsiteManager(
 );
 
 /* GET home page. */
-router.get("/", async function (req, res) {
+router.get("/", async (req, res)=> {
   // return the processed chapter
   const userID = req.cookies["userID"];
   const token = req.cookies["accessToken"];
@@ -45,12 +45,13 @@ router.get("/", async function (req, res) {
   }
 });
 
-router.post("/destination", (req, res) => {
+router.post("/destination", (req, res)=> {
   const newDestination: destination =
     req.body.newConfigDestination || destinationBase;
   instanceSourceWebsite.updateDestination(newDestination);
   // TODO
-  return res.sendStatus(200);
+  res.sendStatus(200);
+  return;
 });
 
 export default router;

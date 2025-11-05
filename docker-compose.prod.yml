@@ -1,0 +1,29 @@
+services:
+  app:
+    build:
+      context: .
+      target: prod
+    container_name: mtlparsorai-app
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+    volumes:
+      - ./src:/app/src
+      - ./bin:/app/bin
+      - ./src/views:/app/src/views
+      - ./src/public:/app/src/public
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  redis_data:

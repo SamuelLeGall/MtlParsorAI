@@ -314,6 +314,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function onMounted() {
     // we restore the store from localStorage if it exist on first page load
     checkInitStore();
+    alert("tesr")
 
     // we restore the inputs fields from the store values
     const configReader = fetchCachedReaderConfig();

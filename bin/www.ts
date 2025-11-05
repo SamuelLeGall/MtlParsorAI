@@ -4,7 +4,7 @@
  * Module dependencies.
  */
 
-import app from "../app";
+import app from "../src/app";
 import createDebug from "debug";
 const debug = createDebug("myexpressapp:server");
 import { createServer } from "http";

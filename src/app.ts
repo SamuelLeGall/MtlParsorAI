@@ -32,13 +32,14 @@ liveReloadServer.watch(join(__dirname, "public"));
 
 const app = express();
 
+// load the redis singleton
+const redisClient = RedisClient.getInstance();
+await redisClient.connect();
+
 // view engine setup
 app.set("views", join(__dirname, "views"));
 app.set("view engine", "hbs");
 
-// load the redis singleton
-const redisClient = RedisClient.getInstance();
-await redisClient.connect();
 
 hbs.registerHelper("json", (context: any) => {
   return JSON.stringify(context);
@@ -123,25 +124,24 @@ export function verifyJWT(expectedUserIDParam: string) {
     }
   };
 }
-app.use((req, res, next) => {
-  // Skip public routes if you want
-  const publicPaths = ["/", "/create", "/login"];
-  if (publicPaths.includes(req.path)) return next();
-
-  return verifyJWT("userID")(req, res, next);
-});
+// app.use((req, res, next) => {
+//   // Skip public routes if you want
+//   const publicPaths = ["/", "/create", "/login"];
+//   if (publicPaths.includes(req.path)) return next();
+//
+//   return verifyJWT("userID")(req, res, next);
+// });
 
 // Catch 404 and forward to error handler
 app.use(function (req: any, res: any, next: any) {
   next(createError(404));
 });
 
-console.log("link for test is ", "http://localhost:3000/");
 // Error handler
 app.use(function (err: any, req: any, res: any, next: any) {
   // Set locals, only providing error in development
   res.locals.message = err.message;
-  res.locals.error = req.app.get("env") === "development" ? err : {};
+  res.locals.error = req.app.get("env") === "develoxpment" ? err : {};
   res.status(err.status || 500);
   res.render("error");
 });
@@ -153,4 +153,5 @@ liveReloadServer.server.once("connection", () => {
   }, 100);
 });
 
+console.log("link for test is ", "http://localhost:3000/");
 export default app;

@@ -1,11 +1,15 @@
-import { destinationBase } from "../business/sourcesWebsites/sourceWebsitesData";
+import {destinationBase, sourcesWebsites} from "../business/sourcesWebsites/sourceWebsitesData";
 import { generativeTextOrchestrator } from "../business/textProcessing/generativeTextOrchestrator";
 import router from "./index";
+import {sourceWebsiteManager} from "../business/sourcesWebsites/sourceWebsiteManager";
 
-router.post("/load", async function (req: any, res: any, next: any) {
+router.post("/load", async function (req, res) {
   const destination = req.body.destination || destinationBase;
   const allowBiggerLimit: boolean = Boolean(req.body.allowBiggerLimit) || false;
-
+  const instanceSourceWebsite = new sourceWebsiteManager(
+      destinationBase,
+      sourcesWebsites,
+  );
   const orchestrator = new generativeTextOrchestrator(instanceSourceWebsite);
   const dataChapter = await orchestrator.computeChapter(
     destination,

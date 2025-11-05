@@ -3,14 +3,16 @@ import OpenAI from "openai";
 import { openAiMessage } from "../../models/openAi";
 // Load the JSON file using require because import json file as module is still experimental
 const require = createRequire(import.meta.url);
-const { SECRET_OPENAI_KEY } = require("../../openaiSecret.json");
+//const { SECRET_OPENAI_KEY } = require("../../../openaiSecret.json");
 
 export class openAiDao {
   async makeAPICall(messages: openAiMessage[]) {
+    // const openai = new OpenAI({
+    //   apiKey: process.env.OPENAI_API_KEY ?? SECRET_OPENAI_KEY,
+    // });
     const openai = new OpenAI({
-      apiKey: SECRET_OPENAI_KEY,
+      apiKey: process.env.OPENAI_API_KEY,
     });
-
     // if we want to not make the api call (for dev)
     const allowAPICall = true;
     if (!allowAPICall) {
