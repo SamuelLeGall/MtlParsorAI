@@ -23,6 +23,7 @@ function updateImports(directory) {
       content = content.replace(
         /import\s+(.*)\s+from\s+['"](\.\.?.*?)['"]/g,
         (match, imports, modulePath) => {
+          if (modulePath.endsWith(".js")) return match; // already patched
           return `import ${imports} from '${modulePath}.js'`;
         }
       );

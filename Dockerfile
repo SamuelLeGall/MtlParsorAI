@@ -60,4 +60,5 @@ EXPOSE 3000
 ENV NODE_ENV=development
 
 # Run initial TypeScript compilation then watch + nodemon
-CMD sh -c "npx tsc && node ./copy-assets.js && node ./update-imports.js && npx nodemon"
+#CMD sh -c "npx tsc && node ./copy-assets.js && node ./update-imports.js && npx nodemon"
+CMD sh -c "npx tsc --watch --preserveWatchOutput & while sleep 2; do node ./copy-assets.js && node ./update-imports.js; done & npx nodemon"
