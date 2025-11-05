@@ -1,7 +1,8 @@
 services:
   app:
     build:
-      context: .
+      context: ../../
+      dockerfile: ./deploy/Dockerfile
       target: dev
     container_name: mtlparsorai-app
     ports:
@@ -14,9 +15,9 @@ services:
 #    depends_on:
 #      - redis
     volumes:
-      - ./src:/app/src
-      - ./bin:/app/bin
-      - ./tsconfig.json:/app/tsconfig.json
+      - ../../src:/app/src
+      - ../../bin:/app/bin
+      - ../../tsconfig.json:/app/tsconfig.json
 #  redis:
 #    image: redis:7-alpine
 #    container_name: redis
