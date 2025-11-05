@@ -124,13 +124,13 @@ export function verifyJWT(expectedUserIDParam: string) {
     }
   };
 }
-// app.use((req, res, next) => {
-//   // Skip public routes if you want
-//   const publicPaths = ["/", "/create", "/login"];
-//   if (publicPaths.includes(req.path)) return next();
-//
-//   return verifyJWT("userID")(req, res, next);
-// });
+app.use((req, res, next) => {
+  // Skip public routes if you want
+  const publicPaths = ["/", "/create", "/login"];
+  if (publicPaths.includes(req.path)) return next();
+
+  return verifyJWT("userID")(req, res, next);
+});
 
 // Catch 404 and forward to error handler
 app.use(function (req: any, res: any, next: any) {
@@ -141,7 +141,7 @@ app.use(function (req: any, res: any, next: any) {
 app.use(function (err: any, req: any, res: any, next: any) {
   // Set locals, only providing error in development
   res.locals.message = err.message;
-  res.locals.error = req.app.get("env") === "develoxpment" ? err : {};
+  res.locals.error = req.app.get("env") === "development" ? err : {};
   res.status(err.status || 500);
   res.render("error");
 });

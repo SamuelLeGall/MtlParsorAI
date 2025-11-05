@@ -1,11 +1,15 @@
 // update-imports.js
-import { readdirSync, statSync, readFileSync, writeFileSync } from "fs";
+import {readdirSync, statSync, readFileSync, writeFileSync, existsSync} from "fs";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 function updateImports(directory) {
+  if (!existsSync(directory)) {
+  console.log(`[update-imports] Directory not found: ${directory}. Skipping for now.`);
+  return;
+}
   const files = readdirSync(directory);
 
   for (const file of files) {

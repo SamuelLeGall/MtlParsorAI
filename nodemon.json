@@ -1,6 +1,11 @@
 {
-  "watch": ["dist"],
+  "watch": ["dist", "views", "public"],
   "ext": "js,hbs,css,json",
   "exec": "npm start",
+  "restartable": "rs",
+  "delay": 1500,
+  "env": {
+    "NODE_ENV": "development"
+  },
   "ignore": ["src"]
 }
