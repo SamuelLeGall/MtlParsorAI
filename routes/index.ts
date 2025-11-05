@@ -4,71 +4,52 @@ import {
   destinationBase,
   sourcesWebsites,
 } from "../business/sourcesWebsites/sourceWebsitesData";
-import { generativeTextOrchestrator } from "../business/textProcessing/generativeTextOrchestrator";
 import { destination } from "../models/contexte";
+import { Authentification } from "../business/auth/Authentification";
+import { ResultFactory } from "../models/response";
 
-var router = Router();
+const router = Router();
 const instanceSourceWebsite = new sourceWebsiteManager(
   destinationBase,
-  sourcesWebsites
+  sourcesWebsites,
 );
 
-// temporary solution since the website in now live
-const keyToAccessBack = ":fr6UoOO4b7nrlC07KAlh6y6Na-qawxsVMr8tRHHL";
-
 /* GET home page. */
-router.get("/", async function (req: any, res: any, next: any) {
+router.get("/", async function (req, res) {
   // return the processed chapter
-  res.render("index", {
-    title: "MtlParsorAI",
-    destination: instanceSourceWebsite.getDestination("default"),
-    sitesSources: instanceSourceWebsite.getSourceWebsites(),
-  });
-});
+  const userID = req.cookies["userID"];
+  const token = req.cookies["accessToken"];
 
-router.get("/bookmark", async function (req: any, res: any, next: any) {
-  // return the processed chapter
-  res.render("bookmark", {
-    title: "MtlParsorAI - Saved books",
-    destination: instanceSourceWebsite.getDestination("default"),
-  });
-});
+  try {
+    const resultValidation = new Authentification().verifyAccessToken(
+      token,
+      userID,
+    );
+    if (ResultFactory.isSuccess(resultValidation)) {
+      // user have an active session open
+      return res.render("index", {
+        title: "MtlParsorAI",
+        destination: instanceSourceWebsite.getDestination("default"),
+        sitesSources: instanceSourceWebsite.getSourceWebsites(),
+      });
+    }
 
-router.post("/load", async function (req: any, res: any, next: any) {
-  const key = typeof req.body.key === "string" ? req.body.key.trim() : "";
-  if (key !== keyToAccessBack) {
-    return res.sendStatus(403);
-  }
-  const destination = req.body.destination || destinationBase;
-  const allowBiggerLimit: boolean = Boolean(req.body.allowBiggerLimit) || false;
-
-  const orchestrator = new generativeTextOrchestrator(instanceSourceWebsite);
-  const dataChapter = await orchestrator.computeChapter(
-    destination,
-    allowBiggerLimit
-  );
-
-  // if there is an error
-  if (!dataChapter.success) {
-    return res.render("error", {
-      title: "Error",
-      errorAI: dataChapter.message,
-      detail: dataChapter.detail,
+    // no session, ask to connect
+    return res.render("login", {
+      title: "MtlParsorAI",
+    });
+  } catch (e) {
+    return res.render("login", {
+      title: "MtlParsorAI",
     });
   }
-
-  // everything is good
-  return res.render("chapter", dataChapter.data);
 });
 
-router.post("/destination", (req: any, res: any) => {
-  const key = typeof req.body.key === "string" ? req.body.key.trim() : "";
-  if (key !== keyToAccessBack) {
-    return res.sendStatus(403);
-  }
+router.post("/destination", (req, res) => {
   const newDestination: destination =
     req.body.newConfigDestination || destinationBase;
   instanceSourceWebsite.updateDestination(newDestination);
+  // TODO
   return res.sendStatus(200);
 });
 

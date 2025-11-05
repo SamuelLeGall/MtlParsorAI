@@ -11,16 +11,13 @@
 
     <div id="config-container" class="grid-container-2 hidden">
         <div class="flex-column gap-half-em">
-            <label>Please enter the security key </label>
-            <input type="text" id="temp-key-input" required>
-
             <label>Please Choose the source website </label>
             <select id="site-source-select">
                 {{#each sitesSources}}
                     <option value="{{this.code}}">{{this.libelle}}</option>
                 {{/each}}
             </select>
-            
+
             <label>Please correct the path template if necessary </label>
             <input type="text" id="path-template-input" value="{{destination.urlParam}}">
             <button onclick="saveConfigAndIdentity()" style="width: fit-content;">
@@ -44,11 +41,11 @@
 </div>
 <hr style="width: 100%; margin: 1em 0">
 <div class="grid-container-3">
-{{#IsNotFirstChapter destination}}  
-    <button id="prev-chapter" onclick="showPreviousChapter()">Previous</button>
-{{/IsNotFirstChapter}}
-<button id="load-chapter" onclick="showCurrentChapter()">Load Chapter</button>
-<button id="next-chapter" onclick="showNextChapter()">Next</button>
+    {{#IsNotFirstChapter destination}}
+        <button id="prev-chapter" onclick="showPreviousChapter()">Previous</button>
+    {{/IsNotFirstChapter}}
+    <button id="load-chapter" onclick="showCurrentChapter()">Load Chapter</button>
+    <button id="next-chapter" onclick="showNextChapter()">Next</button>
 </div>
 <div id="chapter-container">
     <!-- This is where the loaded chapter will be inserted -->
@@ -58,7 +55,7 @@
     <hr style="width: 100%; margin: 1em 0">
     <div>
         {{#IsNotFirstChapter destination}}
-        <button id="prev-chapter" onclick="showPreviousChapter()">Previous</button>
+            <button id="prev-chapter" onclick="showPreviousChapter()">Previous</button>
         {{/IsNotFirstChapter}}
         <button id="next-chapter" onclick="showNextChapter()">Next</button>
     </div>

@@ -1,0 +1,66 @@
+<h3>Welcome to {{title}}</h3>
+<div>
+    <a href="/">Return to Home</a>
+</div>
+<hr style="width: 100%; margin: 1em 0">
+
+<div class="flex-column gap-half-em" style="align-items: center;">
+    <h4>Connexion</h4>
+
+    <div class="grid-container-2" style="max-width: 400px;">
+        <label for="username">Username</label>
+        <input type="text" id="username" placeholder="Enter your username" required>
+
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="Enter your password" required>
+    </div>
+
+    <button onclick="login()" style="margin-top: 1em;">Login</button>
+    <p id="login-error" style="color: rgb(240, 128, 128); display: none;"></p>
+    <p style="margin-top: 1em;">
+        Don’t have an account yet?
+        <a href="/create">Create one</a>
+    </p>
+</div>
+
+<script>
+    async function login() {
+        const username = document.getElementById("username").value.trim();
+        const password = document.getElementById("password").value;
+
+        const errorEl = document.getElementById("login-error");
+        errorEl.style.display = "none";
+        errorEl.textContent = "";
+
+        if (!username || !password) {
+            errorEl.textContent = "Please fill in both fields.";
+            errorEl.style.display = "block";
+            return;
+        }
+
+        try {
+            const response = await fetch("/auth/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ username, password }),
+            });
+
+            const text = await response.text();
+
+            if (!response.ok) {
+                errorEl.textContent = text || "Invalid credentials.";
+                errorEl.style.display = "block";
+                return;
+            }
+
+            // Cookies are automatically set by the backend now
+            window.location.href = "/";
+        } catch (err) {
+            console.error(err);
+            errorEl.textContent = "An unexpected error occurred.";
+            errorEl.style.display = "block";
+        }
+    }
+</script>
