@@ -1,0 +1,36 @@
+services:
+  app:
+    build:
+      context: .
+      target: dev
+    container_name: mtlparsorai-app
+    ports:
+      - "3000:3000"
+      - "35729:35729" #livereload websocket
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true
+      - REDIS_URL=redis://redis:6379
+#    depends_on:
+#      - redis
+    volumes:
+      - ./src:/app/src
+      - ./bin:/app/bin
+      - ./business:/app/business
+      - ./models:/app/models
+      - ./routes:/app/routes
+      - ./app.ts:/app/app.ts
+      - ./views:/app/views
+      - ./public:/app/public
+      - ./tsconfig.json:/app/tsconfig.json
+#  redis:
+#    image: redis:7-alpine
+#    container_name: redis
+#    restart: unless-stopped
+#    ports:
+#      - "6379:6379"
+#    volumes:
+#      - redis_data:/data
+
+#volumes:
+#  redis_data:

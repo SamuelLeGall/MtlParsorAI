@@ -6,7 +6,8 @@
   "scripts": {
     "build": "tsc &&  node ./build/update-imports.js && node ./build/copy-assets.js",
     "start": "node ./build/dist/bin/www.js",
-    "dev": "tsx watch --include ./views/* ./bin/www.ts"
+    "dev:docker": "CHOKIDAR_USEPOLLING=true tsx watch ./bin/www.ts",
+    "dev": "tsx watch ./bin/www.ts"
   },
   "dependencies": {
     "axios": "^1.7.7",
