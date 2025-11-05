@@ -11,6 +11,6 @@
     "resolveJsonModule":true,
     "outDir": "./build/dist"
   },
-  "include": [ "app.ts", "routes/**/*","views/**/*", "public/**/*", "models/**/*", "business/**/*", "bin/**/*"],
+  "include": [ "bin/**/*","src/**/*"],
   "exclude": ["node_modules", "dist", "build"]
 }

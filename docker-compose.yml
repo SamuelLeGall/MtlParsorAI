@@ -16,12 +16,6 @@ services:
     volumes:
       - ./src:/app/src
       - ./bin:/app/bin
-      - ./business:/app/business
-      - ./models:/app/models
-      - ./routes:/app/routes
-      - ./app.ts:/app/app.ts
-      - ./views:/app/views
-      - ./public:/app/public
       - ./tsconfig.json:/app/tsconfig.json
 #  redis:
 #    image: redis:7-alpine
