@@ -16,5 +16,6 @@ COPY ./bin ./bin
 EXPOSE 3000
 
 ENV NODE_ENV=development
+ENV CHOKIDAR_USEPOLLING=true
 
-CMD ["npm", "run", "dev:docker"]
+CMD ["npm", "run", "dev"]

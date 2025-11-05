@@ -6,7 +6,6 @@
   "scripts": {
     "build": "tsc &&  node ./build/update-imports.js && node ./build/copy-assets.js",
     "start": "node ./build/dist/bin/www.js",
-    "dev:docker": "CHOKIDAR_USEPOLLING=true tsx watch ./bin/www.ts",
     "dev": "tsx watch ./bin/www.ts"
   },
   "dependencies": {
