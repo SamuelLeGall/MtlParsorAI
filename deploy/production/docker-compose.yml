@@ -3,21 +3,15 @@ services:
     build:
       context: ../../
       dockerfile: ./deploy/Dockerfile
-      target: dev
-    container_name: mtlparsorai-local # if change -> update init_project.sh
+      target: prod
+    container_name: "mtlparsorai-prod" # if change -> update init_project.sh
     ports:
       - "3000:3000"
       - "35729:35729" #livereload websocket
     environment:
-      - NODE_ENV=development
-      - CHOKIDAR_USEPOLLING=true
-      - REDIS_URL=redis://redis:6379
+      - NODE_ENV=production
 #    depends_on:
 #      - redis
-    volumes:
-      - ../../src:/app/src
-      - ../../bin:/app/bin
-      - ../../tsconfig.json:/app/tsconfig.json
 #  redis:
 #    image: redis:7-alpine
 #    container_name: redis

@@ -29,9 +29,6 @@ WORKDIR /app
 COPY package*.json tsconfig.json openaiSecret.json ./
 RUN npm ci --only=production
 
-# Copy compiled JS (we’ll generate it via CI/CD)
-COPY dist ./dist
-
 EXPOSE 3000
 
 ENV NODE_ENV=production

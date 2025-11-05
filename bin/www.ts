@@ -6,7 +6,7 @@
 
 import app from "../src/app";
 import createDebug from "debug";
-const debug = createDebug("myexpressapp:server");
+const debug = createDebug("MtlParsorAI:server");
 import { createServer } from "http";
 
 /**
