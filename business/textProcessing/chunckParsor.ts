@@ -6,7 +6,7 @@ export class chunckParsor {
   constructor(
     maxChunkSize: number,
     overlapSize: number,
-    maxSentenceLength: number
+    maxSentenceLength: number,
   ) {
     this.maxChunkSize = maxChunkSize;
     this.overlapSize = overlapSize;
@@ -21,7 +21,7 @@ export class chunckParsor {
         sentences.length +
         " sentences for " +
         text.length +
-        " characters"
+        " characters",
     );
     const chunks: string[] = [];
     let currentChunk: string[] = [];

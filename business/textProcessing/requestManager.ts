@@ -13,7 +13,7 @@ export class requestManager {
 
   constructor(
     currentChapterSummaryMaxSize: number,
-    globalContextSummaryMaxSize: number
+    globalContextSummaryMaxSize: number,
   ) {
     this.instanceOpenAi = new openAiDao();
     this.currentChapterSummaryMaxSize = currentChapterSummaryMaxSize;
@@ -29,14 +29,14 @@ export class requestManager {
 
   async processChunk(
     chunk: string,
-    instanceSharedContext: sharedContextManager
+    instanceSharedContext: sharedContextManager,
   ) {
     let currentChunk = chunk;
     const messages = [
       this.startingMessage,
       this.createMessage(
         "user",
-        "Your task is to review the following chapter and rewrite the sentences where necessary to improve readability and clarity"
+        "Your task is to review the following chapter and rewrite the sentences where necessary to improve readability and clarity",
       ),
     ];
     if (instanceSharedContext.getGlobalContext()) {
@@ -44,8 +44,8 @@ export class requestManager {
         this.createMessage(
           "user",
           "Here is the recap of main event for context: " +
-            instanceSharedContext.getGlobalContext()
-        )
+            instanceSharedContext.getGlobalContext(),
+        ),
       );
     }
 
@@ -54,8 +54,8 @@ export class requestManager {
         this.createMessage(
           "user",
           "Here is the recap of last chapter for context: " +
-            instanceSharedContext.getLastChapterSummary()
-        )
+            instanceSharedContext.getLastChapterSummary(),
+        ),
       );
     }
 
@@ -65,8 +65,8 @@ export class requestManager {
         this.createMessage(
           "user",
           "Here is the previous part of the current chapter chunk that you already reworked (for context again)." +
-            instanceSharedContext.getCurrentChapterText()
-        )
+            instanceSharedContext.getCurrentChapterText(),
+        ),
       );
     }
 
@@ -77,8 +77,8 @@ export class requestManager {
         this.createMessage(
           "user",
           "Here is the last few sentences of the last chunk you already reworked. Use it if you think the first sentences of your new chunk are missing parts." +
-            overlap
-        )
+            overlap,
+        ),
       );
     }
     // Include the current chunk
@@ -95,11 +95,11 @@ export class requestManager {
         - If the last sentence of the chunk is incomplete, do not rewrite or include it.
         - For any stats or data sections (e.g., items in [brackets]), place each item on a separate line for a clear, game-like display.
 
-        The chapter chunk: ${currentChunk}`
-      )
+        The chapter chunk: ${currentChunk}`,
+      ),
     );
 
-    let content = await this.instanceOpenAi.makeAPICall(messages);
+    const content = await this.instanceOpenAi.makeAPICall(messages);
     const cleanedContent = content.replace(/```html|```/g, "");
     return cleanedContent;
   }
@@ -111,7 +111,7 @@ export class requestManager {
         "user",
         `Summarize the following text in under ${
           this.currentChapterSummaryMaxSize
-        } tokens, Provide only the revised version, without any additional commentary. Remove any trace of html that may be present: ${instanceSharedContext.getCurrentChapterText()}`
+        } tokens, Provide only the revised version, without any additional commentary. Remove any trace of html that may be present: ${instanceSharedContext.getCurrentChapterText()}`,
       ),
     ];
 
@@ -125,13 +125,13 @@ export class requestManager {
       this.createMessage(
         "user",
         "You will be asked to summarized some content, here is the recap of the last chapter that will be useful for context: " +
-          instanceSharedContext.getLastChapterSummary()
+          instanceSharedContext.getLastChapterSummary(),
       ),
       this.createMessage(
         "user",
         `Please summarize the following context in under ${
           this.globalContextSummaryMaxSize
-        } tokens. Focus on preserving key actions and the main characters' personalities and motivations. Recent events should take precedence, while earlier actions can be summarized or omitted if they are less significant to the current narrative. Ensure essential character traits and motivations are retained. There is no need to reach the token limit if all important actions are already accounted for. Remove any trace of html that may be present. ${instanceSharedContext.getGlobalContext()}`
+        } tokens. Focus on preserving key actions and the main characters' personalities and motivations. Recent events should take precedence, while earlier actions can be summarized or omitted if they are less significant to the current narrative. Ensure essential character traits and motivations are retained. There is no need to reach the token limit if all important actions are already accounted for. Remove any trace of html that may be present. ${instanceSharedContext.getGlobalContext()}`,
       ),
     ];
 

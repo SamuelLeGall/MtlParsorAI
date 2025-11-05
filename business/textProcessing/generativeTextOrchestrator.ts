@@ -33,13 +33,13 @@ export class generativeTextOrchestrator {
     this.instanceSourceWebsite = instanceSourceWebsite;
     this.instanceRequestManager = new requestManager(
       this.currentChapterSummaryMaxSize,
-      this.globalContextSummaryMaxSize
+      this.globalContextSummaryMaxSize,
     );
     this.instanceSharedContext = new sharedContextManager();
     this.instanceParsor = new chunckParsor(
       this.maxChunkSize,
       this.overlapSize,
-      this.maxSentenceLength
+      this.maxSentenceLength,
     );
   }
 
@@ -49,12 +49,11 @@ export class generativeTextOrchestrator {
 
   async computeChapter(
     destination: destination,
-    allowBiggerLimit?: boolean
+    allowBiggerLimit?: boolean,
   ): computeChapterResponse {
     // first we fetch the actual mth text from a specified website
-    const sourceObject = await this.instanceSourceWebsite.fetchChapterText(
-      destination
-    );
+    const sourceObject =
+      await this.instanceSourceWebsite.fetchChapterText(destination);
     if (!sourceObject?.data?.body) {
       return {
         success: false,
@@ -80,7 +79,7 @@ export class generativeTextOrchestrator {
 
     // Split the text into chunks
     const chunks = this.instanceParsor.splitTextIntoChunks(
-      sourceObject.data.body
+      sourceObject.data.body,
     );
 
     // we expect a chapter to be around 8000 words (but i've seen some at 40K...) and generate around 2 to 3 chuncks so if more that 5 there is an issue we dont do the api calls
@@ -112,7 +111,7 @@ export class generativeTextOrchestrator {
       try {
         const content = await this.instanceRequestManager.processChunk(
           chunk,
-          this.instanceSharedContext
+          this.instanceSharedContext,
         );
 
         this.instanceSharedContext.addToCurrentChapterText(content);
@@ -129,10 +128,10 @@ export class generativeTextOrchestrator {
       // recap the current chapter to be used as context in the next chapter
       const currentChapterSummary =
         await this.instanceRequestManager.summarizeCurrentChapter(
-          this.instanceSharedContext
+          this.instanceSharedContext,
         );
       this.instanceSharedContext.setCurrentChapterSummary(
-        currentChapterSummary
+        currentChapterSummary,
       );
     } catch (e: any) {
       console.error("processChunk en erreur - ", e.message);
@@ -145,7 +144,7 @@ export class generativeTextOrchestrator {
     // update the global context and integrate the currentChapterSummary
     const globalContextUpdated =
       await this.instanceRequestManager.manageGlobalContext(
-        this.instanceSharedContext
+        this.instanceSharedContext,
       );
     this.instanceSharedContext.updateGlobalContext(globalContextUpdated);
 
