@@ -4,11 +4,9 @@ import { RedisClient } from "../../infrastructure/database/redisClient";
 
 export class UsersRepository {
   private db;
-  private userKeyPrefix = "user:";
-  private usernameIndexPrefix = "username:";
 
-  constructor(redis = RedisClient.getInstance().getUsersStore()) {
-    this.db = redis;
+  constructor(redisUsers = RedisClient.getInstance().getUsersStore()) {
+    this.db = redisUsers;
   }
 
   public async create(username: string, passwordHash: string): Promise<string> {

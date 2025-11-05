@@ -144,7 +144,7 @@ export class Authentification {
   ): Promise<Result<UserDB>> {
     // check if we found an account for this username
     const usersRepo = new UsersRepository();
-    const user = usersRepo.fetchByUsername(username);
+    const user = await usersRepo.fetchByUsername(username);
     if (!user) {
       return [
         null,
@@ -300,7 +300,7 @@ export class Authentification {
 
       // check that no user exist for this username
       const usersRepo = new UsersRepository();
-      const user = usersRepo.fetchByUsername(normalizedUsername);
+      const user = await usersRepo.fetchByUsername(normalizedUsername);
       if (user) {
         return [
           null,
@@ -322,7 +322,7 @@ export class Authentification {
 
       const passwordHash = await bcrypt.hash(normalizedPassword, 12);
 
-      usersRepo.create(normalizedUsername, passwordHash);
+      await usersRepo.create(normalizedUsername, passwordHash);
 
       return [true, null];
     } catch (e) {

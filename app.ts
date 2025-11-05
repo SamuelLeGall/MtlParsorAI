@@ -17,6 +17,7 @@ import { destination } from "./models/contexte";
 import { Authentification } from "./business/auth/Authentification";
 import { ResultFactory } from "./models/response";
 import { ErrorFactory } from "./models/appError";
+import { RedisClient } from "./infrastructure/database/redisClient";
 
 // Create a livereload server
 const liveReloadServer = createServer();
@@ -35,6 +36,7 @@ const app = express();
 app.set("views", join(__dirname, "views"));
 app.set("view engine", "hbs");
 
+// load the redis singleton
 const redisClient = RedisClient.getInstance();
 await redisClient.connect();
 
