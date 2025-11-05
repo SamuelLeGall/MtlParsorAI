@@ -1,0 +1,25 @@
+services:
+  app:
+    build:
+      context: ../../
+      dockerfile: ./deploy/Dockerfile
+      target: prod
+    container_name: "mtlparsorai-prod" # if change -> update init_project.sh
+    ports:
+      - "3000:3000"
+      - "35729:35729" #livereload websocket
+    environment:
+      - NODE_ENV=production
+#    depends_on:
+#      - redis
+#  redis:
+#    image: redis:7-alpine
+#    container_name: redis
+#    restart: unless-stopped
+#    ports:
+#      - "6379:6379"
+#    volumes:
+#      - redis_data:/data
+
+#volumes:
+#  redis_data:

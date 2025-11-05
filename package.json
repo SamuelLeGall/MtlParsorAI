@@ -1,12 +1,12 @@
 {
-  "name": "myexpressapp",
+  "name": "MtlParsorAI",
   "version": "0.0.0",
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "tsc &&  node ./build/update-imports.js && node ./build/copy-assets.js",
+    "build": "tsc &&  node ./deploy/build-utils/update-imports.js && node ./deploy/build-utils/copy-assets.js",
     "start": "node ./build/dist/bin/www.js",
-    "dev": "tsx watch --include ./views/* ./bin/www.ts"
+    "dev": "tsx watch ./bin/www.ts"
   },
   "dependencies": {
     "axios": "^1.7.7",
