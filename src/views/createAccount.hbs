@@ -1,0 +1,66 @@
+<h3>Welcome to {{title}}</h3>
+<div>
+    <a href="/">Return to Home</a>
+</div>
+
+<hr style="width: 100%; margin: 1em 0">
+
+<div class="flex-column gap-half-em" style="align-items: center;">
+    <h4>Create Your Account</h4>
+
+    <div class="grid-container-2" style="max-width: 400px;">
+        <label for="username">Username</label>
+        <input type="text" id="username" placeholder="Choose a username" required>
+
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="Choose a strong password" required>
+    </div>
+
+    <button onclick="createAccount()" style="margin-top: 1em;">Create Account</button>
+    <p id="create-error" style="color: rgb(240, 128, 128); display: none;"></p>
+    <p style="margin-top: 1em;">
+        Already have an account?
+        <a href="/login">Login here</a>
+    </p>
+</div>
+
+<script>
+    async function createAccount() {
+        const username = document.getElementById("username").value.trim();
+        const password = document.getElementById("password").value;
+        const errorEl = document.getElementById("create-error");
+
+        errorEl.style.display = "none";
+        errorEl.textContent = "";
+
+        if (!username || !password) {
+            errorEl.textContent = "Please fill in both fields.";
+            errorEl.style.display = "block";
+            return;
+        }
+
+        try {
+            const response = await fetch("/create", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ username, password }),
+            });
+
+            if (response.status === 201) {
+                alert("Account successfully created! You can now log in.");
+                window.location.href = "/login";
+                return;
+            }
+
+            const text = await response.text();
+            errorEl.textContent = text || "Account creation failed.";
+            errorEl.style.display = "block";
+        } catch (err) {
+            console.error(err);
+            errorEl.textContent = "An unexpected error occurred.";
+            errorEl.style.display = "block";
+        }
+    }
+</script>

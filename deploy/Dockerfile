@@ -26,11 +26,11 @@ FROM node:20-alpine AS prod
 WORKDIR /app
 
 # Copy package.json & install only prod deps
+# --ignore-scripts to not execute lifecycle scripts like prepare
 COPY package*.json tsconfig.json ./
-RUN npm ci --only=production
+RUN npm ci --omit=dev --ignore-scripts
 
 # Copy compiled JS (we’ll generate it via CI/CD)
-COPY dist ./dist
 COPY openaiSecret.json ./dist
 
 EXPOSE 3000
