@@ -1,3 +1,22 @@
+# Stage 1: Build
+FROM node:20-alpine AS build
+
+WORKDIR /app
+
+# Copy package files & tsconfig
+COPY package*.json tsconfig.json ./
+
+# Install dev dependencies
+RUN npm ci
+
+# Copy source code
+COPY ../src ./src
+COPY ../bin ./bin
+COPY ./deploy/build-utils ./deploy/build-utils
+
+# Build TypeScript & run post-build scripts
+RUN npm run build
+
 FROM node:20-alpine AS dev
 
 WORKDIR /app
@@ -26,11 +45,13 @@ FROM node:20-alpine AS prod
 WORKDIR /app
 
 # Copy package.json & install only prod deps
-# --ignore-scripts to not execute lifecycle scripts like prepare
 COPY package*.json tsconfig.json ./
 RUN npm ci --omit=dev --ignore-scripts
 
-# Copy compiled JS (we’ll generate it via CI/CD)
+# Copy compiled JS from build stage
+COPY --from=build /app/dist ./dist
+
+# Copy secrets
 COPY openaiSecret.json ./dist
 
 EXPOSE 3000
