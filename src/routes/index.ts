@@ -7,7 +7,7 @@ import {
 import { generativeTextOrchestrator } from "../business/textProcessing/generativeTextOrchestrator";
 import { destination } from "../models/contexte";
 
-var router = Router();
+const router = Router();
 const instanceSourceWebsite = new sourceWebsiteManager(
   destinationBase,
   sourcesWebsites

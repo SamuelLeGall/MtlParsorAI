@@ -6,6 +6,8 @@
   "scripts": {
     "build": "tsc &&  node ./deploy/build-utils/update-imports.js && node ./deploy/build-utils/copy-assets.js",
     "start": "node ./build/dist/bin/www.js",
+    "lint": "eslint --ext .js,.ts src --max-warnings=0 && tsc --noEmit",
+    "lint:fix": "eslint --ext .js,.ts src --max-warnings=0 --fix && tsc --noEmit",
     "dev": "tsx watch ./bin/www.ts"
   },
   "dependencies": {
@@ -29,10 +31,17 @@
     "@types/livereload": "^0.9.5",
     "@types/morgan": "^1.9.9",
     "@types/node": "^22.7.6",
+    "eslint": "~9.33.0",
+    "@eslint/js": "~9.33.0",
+    "eslint-config-prettier": "~10.1.8",
+    "eslint-plugin-prettier": "~5.5.4",
+    "nodemon": "^3.1.10",
+    "prettier": "~3.6.2",
     "connect-livereload": "^0.6.1",
     "fs-extra": "^11.2.0",
     "livereload": "^0.9.3",
     "tsx": "^4.19.1",
-    "typescript": "^5.6.3"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "~8.39.1"
   }
 }
