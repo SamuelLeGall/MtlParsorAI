@@ -52,7 +52,11 @@ router.post("/login", async function (req, res) {
 
 router.post("/create", async function (req, res) {
   const instance = new Authentification();
-  const result = await instance.create(req.body.username, req.body.password);
+  const result = await instance.create(
+    req.body.username,
+    req.body.password,
+    req.body.authKey,
+  );
   if (ResultFactory.isError(result)) {
     const [, errorCreate] = result;
     errorCreate.logToConsole();
