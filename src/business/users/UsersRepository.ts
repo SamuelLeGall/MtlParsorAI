@@ -8,7 +8,11 @@ export class UsersRepository {
     this.db = redisUsers;
   }
 
-  public async create(username: string, passwordHash: string): Promise<string> {
+  public async create(
+    username: string,
+    passwordHash: string,
+    adminRoleEnabled: boolean,
+  ): Promise<string> {
     const id = crypto.randomUUID();
     const normalizedUsername = username.trim().toLowerCase();
 
@@ -24,7 +28,14 @@ export class UsersRepository {
       passwordHash,
       active: true,
       created: new Date(),
+      roles: [],
     };
+
+    if (adminRoleEnabled) {
+      user.roles.push("ADMINISTRATOR");
+    } else {
+      user.roles.push("GUEST");
+    }
 
     // store user and username index
     await this.db.saveUser(user);

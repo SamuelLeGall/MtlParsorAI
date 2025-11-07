@@ -266,8 +266,26 @@ export class Authentification {
   public async create(
     username: string,
     password: string,
+    authKey: string | undefined,
   ): Promise<Result<true>> {
     try {
+      if (!process.env.ADMIN_CREATION_SECRET) {
+        return [
+          null,
+          new AppError(
+            `No ADMIN_CREATION_SECRET defined — blocking all account creation for safety reasons`,
+            AppErrorCodes.CONFIGURATION_ERROR,
+            ErrorCategory.DOMAIN,
+            ErrorSeverity.HIGH,
+            ErrorFactory.createContext("Service", "create", {}),
+            {
+              userMessage: `Account creation is temporarily closed. Sorry for the inconvenience.`,
+              isRecoverable: false,
+            },
+          ),
+        ];
+      }
+
       // validate and normalize the username
       const resultNormalizeUsername =
         this.validateAndNormalizeUsername(username);
@@ -298,6 +316,13 @@ export class Authentification {
       const [normalizedUsername] = resultNormalizeUsername;
       const [normalizedPassword] = resultNormalizePassword;
 
+      // we check the authorization key to create an account :
+      const normalizedAuthKey = validator.escape(authKey?.trim() ?? "");
+      const normalizeEnvAuthKey = validator.escape(
+        process.env.ADMIN_CREATION_SECRET.trim(),
+      );
+      const adminRoleEnabled = normalizedAuthKey === normalizeEnvAuthKey;
+
       // check that no user exist for this username
       const usersRepo = new UsersRepository();
       const user = await usersRepo.fetchByUsername(normalizedUsername);
@@ -322,7 +347,11 @@ export class Authentification {
 
       const passwordHash = await bcrypt.hash(normalizedPassword, 12);
 
-      await usersRepo.create(normalizedUsername, passwordHash);
+      await usersRepo.create(
+        normalizedUsername,
+        passwordHash,
+        adminRoleEnabled,
+      );
 
       return [true, null];
     } catch (e) {
@@ -346,11 +375,12 @@ export class Authentification {
         userID: string;
       };
       const userIDSanitized = validator.escape(payload.userID);
+      const expectedUserIDSanitized = validator.escape(expectedUserIDParam);
 
       // Check that userID in params matches token userID
       if (
-        !expectedUserIDParam ||
-        (expectedUserIDParam && expectedUserIDParam !== userIDSanitized)
+        !expectedUserIDSanitized ||
+        (expectedUserIDSanitized && expectedUserIDSanitized !== userIDSanitized)
       ) {
         return [
           null,
@@ -361,7 +391,7 @@ export class Authentification {
             ErrorSeverity.HIGH,
             ErrorFactory.createContext("Service", "verifyAccessToken", {
               userIDToken: userIDSanitized,
-              usernameParam: expectedUserIDParam,
+              userIDCookie: expectedUserIDSanitized,
             }),
             {
               userMessage: "An Error occured",

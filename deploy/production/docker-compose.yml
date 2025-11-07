@@ -12,6 +12,7 @@ services:
       - NODE_ENV=production
       - CHOKIDAR_USEPOLLING=true
       - REDIS_URL=redis://redis:6379
+      - ADMIN_CREATION_SECRET=fr6UoOO4b7nrlCzrfg07K654Gh6y6Na-qawxsVMr8tRHHL
     depends_on:
       - redis
   redis:

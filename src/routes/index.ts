@@ -21,27 +21,31 @@ router.get("/", async (req, res) => {
   const token = req.cookies["accessToken"];
 
   try {
+    if (!userID || !token) {
+      // no session, ask to connect
+      return res.redirect("/login");
+    }
+
     const resultValidation = new Authentification().verifyAccessToken(
       token,
       userID,
     );
-    if (ResultFactory.isSuccess(resultValidation)) {
-      // user have an active session open
-      return res.render("index", {
-        title: "MtlParsorAI",
-        destination: instanceSourceWebsite.getDestination("default"),
-        sitesSources: instanceSourceWebsite.getSourceWebsites(),
-      });
+
+    if (ResultFactory.isError(resultValidation)) {
+      const [, errorValidation] = resultValidation;
+      errorValidation.logToConsole();
+      // invalid session, ask to connect again
+      return res.redirect("/login");
     }
 
-    // no session, ask to connect
-    return res.render("login", {
+    // user have an active session open
+    return res.render("index", {
       title: "MtlParsorAI",
+      destination: instanceSourceWebsite.getDestination("default"),
+      sitesSources: instanceSourceWebsite.getSourceWebsites(),
     });
   } catch (e) {
-    return res.render("login", {
-      title: "MtlParsorAI",
-    });
+    return res.redirect("/login");
   }
 });
 

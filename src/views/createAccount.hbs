@@ -1,8 +1,4 @@
 <h3>Welcome to {{title}}</h3>
-<div>
-    <a href="/">Return to Home</a>
-</div>
-
 <hr style="width: 100%; margin: 1em 0">
 
 <div class="flex-column gap-half-em" style="align-items: center;">
@@ -14,7 +10,15 @@
 
         <label for="password">Password</label>
         <input type="password" id="password" placeholder="Choose a strong password" required>
+
+        <label for="authKey">Authorization Key (optional)</label>
+        <input type="password" id="authKey" placeholder="Enter admin key">
     </div>
+
+    <p style="max-width: 650px; margin-top: 10px; font-size: 0.9em; color: #bbb; line-height: 1.5em">
+        🔐 If you want to generate <strong>new chapters</strong> (admin access), enter your authorization key.<br>
+        Otherwise, leave it blank to create a guest account that can read existing chapters.
+    </p>
 
     <button onclick="createAccount()" style="margin-top: 1em;">Create Account</button>
     <p id="create-error" style="color: rgb(240, 128, 128); display: none;"></p>
@@ -28,6 +32,7 @@
     async function createAccount() {
         const username = document.getElementById("username").value.trim();
         const password = document.getElementById("password").value;
+        const authKey = document.getElementById("authKey").value.trim();
         const errorEl = document.getElementById("create-error");
 
         errorEl.style.display = "none";
@@ -45,7 +50,7 @@
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ username, password }),
+                body: JSON.stringify({ username, password, authKey }),
             });
 
             if (response.status === 201) {
