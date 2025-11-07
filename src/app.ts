@@ -1,4 +1,3 @@
-import createError from "http-errors";
 import express from "express";
 import cookieParser from "cookie-parser";
 import logger from "morgan";
@@ -13,7 +12,13 @@ import chaptersRoute from "./routes/chapters";
 import { destination } from "./models/contexte";
 import { Authentification } from "./business/auth/Authentification";
 import { ResultFactory } from "./models/response";
-import { ErrorFactory } from "./models/appError";
+import {
+  AppError,
+  AppErrorCodes,
+  ErrorCategory,
+  ErrorFactory,
+  ErrorSeverity,
+} from "./models/appError";
 import { RedisClient } from "./infrastructure/database/redisClient";
 
 // Watch for changes in views and public directories
@@ -93,27 +98,57 @@ app.use(cookieParser());
 app.use(express.static(join(__dirname, "public")));
 
 // Routes
+
+app.use((req, res, next) => {
+  // Skip public routes if you want
+  const publicViewsPaths = ["/create", "/login"];
+  const publicPostPaths = ["/auth/create", "/auth/login"];
+  const publicPaths = ["/", ...publicViewsPaths, ...publicPostPaths];
+  if (publicPaths.includes(req.path)) return next();
+
+  return verifyJWT()(req, res, next);
+});
+
 app.use("/", indexRoute);
 app.use("/auth", authRoute);
 app.use("/users", usersRoute);
 app.use("/chapters", chaptersRoute);
 
 // Apply to all routes
-export function verifyJWT(expectedUserIDParam: string) {
+export function verifyJWT() {
   return (req: any, res: any, next: any) => {
     try {
-      const authHeader = req.headers["authorization"];
-      if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        return res
-          .status(401)
-          .json({ message: "Missing or invalid Authorization header" });
+      const userID = req.cookies["userID"];
+      const token = req.cookies["accessToken"];
+      if (!userID || !token) {
+        const error = new AppError(
+          `Missing or invalid Authorization headers`,
+          AppErrorCodes.ACTION_NOT_ALLOWED,
+          ErrorCategory.DOMAIN,
+          ErrorSeverity.MEDIUM,
+          ErrorFactory.createContext(
+            "Service",
+            "validateAndNormalizePassword",
+            {
+              userID: userID,
+              accessToken: token,
+            },
+          ),
+          {
+            userMessage: `An error occured, try again later.`,
+            isRecoverable: false,
+          },
+        );
+        error.logToConsole();
+        return res.render("error", {
+          title: "Error",
+          errorAI: error.getPublicMessage(),
+        });
       }
-
-      const token = authHeader.split(" ")[1];
 
       const resultValidation = new Authentification().verifyAccessToken(
         token,
-        expectedUserIDParam,
+        userID,
       );
       if (ResultFactory.isError(resultValidation)) {
         const [, errorValidation] = resultValidation;
@@ -139,17 +174,12 @@ export function verifyJWT(expectedUserIDParam: string) {
   };
 }
 
-app.use((req, res, next) => {
-  // Skip public routes if you want
-  const publicPaths = ["/", "/create", "/login"];
-  if (publicPaths.includes(req.path)) return next();
-
-  return verifyJWT("userID")(req, res, next);
-});
-
 // Catch 404 and forward to error handler
-app.use(function (req: any, res: any, next: any) {
-  next(createError(404));
+app.use(function (_, res: any) {
+  return res.render("error", {
+    title: "Error",
+    errorAI: "Page not found",
+  });
 });
 
 // Error handler
@@ -158,7 +188,10 @@ app.use(function (err: any, req: any, res: any) {
   res.locals.message = err.message;
   res.locals.error = req.app.get("env") === "development" ? err : {};
   res.status(err.status || 500);
-  res.render("error");
+  return res.render("error", {
+    title: "Error",
+    errorAI: "An error Occured",
+  });
 });
 
 console.log("link for test is ", "http://localhost:3000/");

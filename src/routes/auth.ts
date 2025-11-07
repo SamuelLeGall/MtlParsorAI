@@ -1,17 +1,89 @@
 import router from "./index";
 import { Authentification } from "../business/auth/Authentification";
 import { ResultFactory } from "../models/response";
-
+import { sourceWebsiteManager } from "../business/sourcesWebsites/sourceWebsiteManager";
+import {
+  destinationBase,
+  sourcesWebsites,
+} from "../business/sourcesWebsites/sourceWebsitesData";
+const instanceSourceWebsite = new sourceWebsiteManager(
+  destinationBase,
+  sourcesWebsites,
+);
 router.get("/login", async function (req, res) {
-  return res.render("login", {
-    title: "MtlParsorAI",
-  });
+  // return the processed chapter
+  const userID = req.cookies["userID"];
+  const token = req.cookies["accessToken"];
+
+  try {
+    if (!userID || !token) {
+      // no session, ask to connect
+      return res.render("login", {
+        title: "MtlParsorAI",
+      });
+    }
+
+    const resultValidation = new Authentification().verifyAccessToken(
+      token,
+      userID,
+    );
+
+    if (ResultFactory.isError(resultValidation)) {
+      const [, errorValidation] = resultValidation;
+      errorValidation.logToConsole();
+      // invalid session, ask to connect again
+      return res.render("login", {
+        title: "MtlParsorAI",
+      });
+    }
+
+    // user have an active session open
+    return res.render("index", {
+      title: "MtlParsorAI",
+      destination: instanceSourceWebsite.getDestination("default"),
+      sitesSources: instanceSourceWebsite.getSourceWebsites(),
+    });
+  } catch (e) {
+    return res.redirect("/login");
+  }
 });
 
 router.get("/create", async function (req, res) {
-  return res.render("createAccount", {
-    title: "MtlParsorAI",
-  });
+  // return the processed chapter
+  const userID = req.cookies["userID"];
+  const token = req.cookies["accessToken"];
+
+  try {
+    if (!userID || !token) {
+      // no session, ask to connect
+      return res.render("createAccount", {
+        title: "MtlParsorAI",
+      });
+    }
+
+    const resultValidation = new Authentification().verifyAccessToken(
+      token,
+      userID,
+    );
+
+    if (ResultFactory.isError(resultValidation)) {
+      const [, errorValidation] = resultValidation;
+      errorValidation.logToConsole();
+      // invalid session, ask to connect again
+      return res.render("createAccount", {
+        title: "MtlParsorAI",
+      });
+    }
+
+    // user have an active session open
+    return res.render("index", {
+      title: "MtlParsorAI",
+      destination: instanceSourceWebsite.getDestination("default"),
+      sitesSources: instanceSourceWebsite.getSourceWebsites(),
+    });
+  } catch (e) {
+    return res.redirect("/login");
+  }
 });
 
 router.post("/login", async function (req, res) {
