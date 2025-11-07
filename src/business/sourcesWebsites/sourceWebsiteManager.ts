@@ -9,7 +9,7 @@ export class sourceWebsiteManager {
 
   constructor(
     destination: destination,
-    configSourceWebsite: sourceWebsitesSelect[]
+    configSourceWebsite: sourceWebsitesSelect[],
   ) {
     this.destinations = [destination];
     this.configSourceWebsite = configSourceWebsite;
@@ -21,13 +21,13 @@ export class sourceWebsiteManager {
 
   getDestination(userId: string): destination | undefined {
     return this.destinations.find(
-      (destination) => destination.userId === userId
+      (destination) => destination.userId === userId,
     );
   }
 
   updateDestination(destination: destination): void {
     const index = this.destinations.findIndex(
-      (destination) => destination.userId === destination.userId
+      (destination) => destination.userId === destination.userId,
     );
     this.destinations[index] = destination;
   }
@@ -64,7 +64,7 @@ export class sourceWebsiteManager {
 
       // Load the HTML into cheerio
       const $ = load(response.data);
-      let chapterData: {
+      const chapterData: {
         title: null | string;
         body: null | string;
       } = {
@@ -93,7 +93,7 @@ export class sourceWebsiteManager {
             null;
           chapterData.body =
             scriptContent?.props?.pageProps?.serie?.chapter_data?.data?.body.join(
-              " "
+              " ",
             ) || null;
           break;
       }

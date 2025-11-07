@@ -7,6 +7,7 @@ import {
   fetchCachedReaderConfig,
   setChapterNumber,
 } from "./cache.js";
+/* global destination */
 document.addEventListener("DOMContentLoaded", () => {
   function toggleElementVisibility(id) {
     const element = document.getElementById(id);
@@ -29,11 +30,11 @@ document.addEventListener("DOMContentLoaded", () => {
       ) {
         destinationToSend = JSON.parse(JSON.stringify(destination));
         destinationToSend.params.find(
-          (el) => el.code === "CHAPTER_NUMBER"
+          (el) => el.code === "CHAPTER_NUMBER",
         ).value = chapterNumber;
       }
       const destinationToSendChapterNumber = destinationToSend.params.find(
-        (el) => el.code === "CHAPTER_NUMBER"
+        (el) => el.code === "CHAPTER_NUMBER",
       ).value;
 
       // destination is set in index.hbs using data from the back
@@ -43,7 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (chapterStore) {
         console.log(
           "chapter " + destinationToSendChapterNumber + " is in the store",
-          chapterStore
+          chapterStore,
         );
         // we show the navbar under the chapter
         toggleElementVisibility("navigation-under-chapter");
@@ -51,7 +52,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       console.log(
-        "fetching the chapter " + destinationToSendChapterNumber + " by API"
+        "fetching the chapter " + destinationToSendChapterNumber + " by API",
       );
 
       const key = document.getElementById("temp-key-input").value;
@@ -103,12 +104,12 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   async function loadCurrentChapter(
     currentChapterNumber,
-    allowBiggerLimit = false
+    allowBiggerLimit = false,
   ) {
     try {
       const chapterData = await loadChapter(
         currentChapterNumber,
-        allowBiggerLimit
+        allowBiggerLimit,
       );
       return { success: true, chapterData };
     } catch (e) {
@@ -233,7 +234,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function showSpecificChapter() {
     const chapterNumberToLoad = parseInt(
-      document.getElementById("selected-chapter-input").value
+      document.getElementById("selected-chapter-input").value,
     );
 
     // we update the duplicated fields
@@ -273,7 +274,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const pathTemplate = document.getElementById("path-template-input").value;
     const serieFragment = document.getElementById("serie-input").value;
     const chapterNumberToLoad = parseInt(
-      document.getElementById("config-chapter-number-input").value
+      document.getElementById("config-chapter-number-input").value,
     );
     // we update the duplicated fields
     document.getElementById("selected-chapter-input").value =
@@ -300,12 +301,11 @@ document.addEventListener("DOMContentLoaded", () => {
       sourceSiteCode,
       pathTemplate,
       serieFragment,
-      chapterNumberToLoad
+      chapterNumberToLoad,
     );
 
     // we udpate the destination
-    destination = destinationCreated;
-    updateDestinationBack(destination);
+    await updateDestinationBack(destinationCreated);
 
     // we save the store into localStorage
     saveStoreToLocalStorage();

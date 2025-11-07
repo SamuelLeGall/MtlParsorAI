@@ -10,14 +10,14 @@ import { destination } from "../models/contexte";
 const router = Router();
 const instanceSourceWebsite = new sourceWebsiteManager(
   destinationBase,
-  sourcesWebsites
+  sourcesWebsites,
 );
 
 // temporary solution since the website in now live
 const keyToAccessBack = ":fr6UoOO4b7nrlC07KAlh6y6Na-qawxsVMr8tRHHL";
 
 /* GET home page. */
-router.get("/", async function (req: any, res: any, next: any) {
+router.get("/", async function (req: any, res: any) {
   // return the processed chapter
   res.render("index", {
     title: "MtlParsorAI",
@@ -26,7 +26,7 @@ router.get("/", async function (req: any, res: any, next: any) {
   });
 });
 
-router.get("/bookmark", async function (req: any, res: any, next: any) {
+router.get("/bookmark", async function (req: any, res: any) {
   // return the processed chapter
   res.render("bookmark", {
     title: "MtlParsorAI - Saved books",
@@ -34,7 +34,7 @@ router.get("/bookmark", async function (req: any, res: any, next: any) {
   });
 });
 
-router.post("/load", async function (req: any, res: any, next: any) {
+router.post("/load", async function (req: any, res: any) {
   const key = typeof req.body.key === "string" ? req.body.key.trim() : "";
   if (key !== keyToAccessBack) {
     return res.sendStatus(403);
@@ -45,7 +45,7 @@ router.post("/load", async function (req: any, res: any, next: any) {
   const orchestrator = new generativeTextOrchestrator(instanceSourceWebsite);
   const dataChapter = await orchestrator.computeChapter(
     destination,
-    allowBiggerLimit
+    allowBiggerLimit,
   );
 
   // if there is an error

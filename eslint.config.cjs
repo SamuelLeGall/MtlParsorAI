@@ -10,12 +10,21 @@ const { defineConfig } = require("eslint/config");
 /** @type {import('eslint').Linter.Config[]} */
 module.exports = defineConfig([
   {
-    files: ["**/*.{js,mjs,cjs,ts,vue}"],
+    files: ["**/*.{js,mjs,cjs,ts}"],
   },
   {
     languageOptions: {
       parserOptions: {
         parser: "@typescript-eslint/parser",
+      },
+      globals: {
+        window: "readonly",
+        document: "readonly",
+        console: "readonly",
+        navigator: "readonly",
+        localStorage: "readonly",
+        fetch: "readonly",
+        scrollTo: "readonly",
       },
     },
   },
@@ -26,7 +35,7 @@ module.exports = defineConfig([
     rules: {
       // disable the core rule (the TS plugin provides the replacement)
       "no-unused-vars": "off",
-
+      "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-unused-vars": [
         "error",
         {

@@ -1,3 +1,4 @@
+/* global destination */
 let store = {
   config: {
     init: true,
@@ -24,7 +25,7 @@ function saveStoreToLocalStorage() {
   if (chaptersInStore > 100) {
     const result = cleanStoreChapters(store, 75);
     console.log(
-      `store cleaned because too many chapters where in cache. ${result?.cleaned} chapters deleted, still ${result?.remaining} chapter in cache`
+      `store cleaned because too many chapters where in cache. ${result?.cleaned} chapters deleted, still ${result?.remaining} chapter in cache`,
     );
   }
 
@@ -35,7 +36,7 @@ function saveStoreToLocalStorage() {
 function cleanStoreChapters(store, chaptersToKeep) {
   const currentSourceId = destination.sourceSiteCode;
   const currentSerieFragment = destination.params.find(
-    (el) => el.code === "SERIE_FRAGMENT"
+    (el) => el.code === "SERIE_FRAGMENT",
   )?.value;
   let allChapters = [];
 
@@ -56,14 +57,14 @@ function cleanStoreChapters(store, chaptersToKeep) {
         chapter.destination.sourceSiteCode === currentSourceId &&
         chapter.destination.params.find((el) => el.code === "SERIE_FRAGMENT")
           ?.value === currentSerieFragment
-      )
+      ),
   );
 
   const currentSeriesChapters = allChapters.filter(
     (chapter) =>
       chapter.destination.sourceSiteCode === currentSourceId &&
       chapter.destination.params.find((el) => el.code === "SERIE_FRAGMENT")
-        ?.value === currentSerieFragment
+        ?.value === currentSerieFragment,
   );
 
   // Calculate how many chapters we need to remove
@@ -95,7 +96,7 @@ function cleanStoreChapters(store, chaptersToKeep) {
   cleanedChapters.forEach((chapterToRemove) => {
     store.data.forEach((source) => {
       source.chaptersList = source.chaptersList.filter(
-        (chapter) => chapter !== chapterToRemove
+        (chapter) => chapter !== chapterToRemove,
       );
     });
   });
@@ -136,13 +137,13 @@ function countChaptersInStore() {
 
 function fetchCachedChapter(destinationParam) {
   const sourceSiteCache = store.data.find(
-    (el) => el.codeSource === destinationParam.sourceSiteCode
+    (el) => el.codeSource === destinationParam.sourceSiteCode,
   );
   const currentChapterNumber = destinationParam.params.find(
-    (el) => el.code === "CHAPTER_NUMBER"
+    (el) => el.code === "CHAPTER_NUMBER",
   )?.value;
   const currentSerieFragment = destinationParam.params.find(
-    (el) => el.code === "SERIE_FRAGMENT"
+    (el) => el.code === "SERIE_FRAGMENT",
   )?.value;
 
   if (!sourceSiteCache) {
@@ -155,7 +156,7 @@ function fetchCachedChapter(destinationParam) {
       el.destination.params.find((el) => el.code === "SERIE_FRAGMENT")
         ?.value === currentSerieFragment &&
       el.destination.params.find((el) => el.code === "CHAPTER_NUMBER")
-        ?.value === currentChapterNumber
+        ?.value === currentChapterNumber,
   );
   if (!chapterData) {
     return null;
@@ -166,13 +167,13 @@ function fetchCachedChapter(destinationParam) {
 
 function addChapterToCache(destinationParam, chapterData) {
   const currentChapterNumber = destinationParam.params.find(
-    (el) => el.code === "CHAPTER_NUMBER"
+    (el) => el.code === "CHAPTER_NUMBER",
   )?.value;
   const currentSerieFragment = destinationParam.params.find(
-    (el) => el.code === "SERIE_FRAGMENT"
+    (el) => el.code === "SERIE_FRAGMENT",
   )?.value;
   let storeForSourceSite = store.data.find(
-    (el) => el.codeSource === destinationParam.sourceSiteCode
+    (el) => el.codeSource === destinationParam.sourceSiteCode,
   );
   const chapter = {
     destination: destinationParam,
@@ -187,7 +188,7 @@ function addChapterToCache(destinationParam, chapterData) {
         destinationParam.sourceSiteCode +
         " in store with chapter " +
         currentChapterNumber +
-        " in it"
+        " in it",
     );
     store.data.push({
       codeSource: destinationParam.sourceSiteCode,
@@ -201,7 +202,7 @@ function addChapterToCache(destinationParam, chapterData) {
       el.destination.params.find((el) => el.code === "SERIE_FRAGMENT")
         ?.value === currentSerieFragment &&
       el.destination.params.find((el) => el.code === "CHAPTER_NUMBER")
-        ?.value === currentChapterNumber
+        ?.value === currentChapterNumber,
   );
 
   // the current chapter is already cached. nothing to do
@@ -211,7 +212,7 @@ function addChapterToCache(destinationParam, chapterData) {
       "chapter " +
         currentChapterNumber +
         " is already In store - dateCreated updated",
-      chapter.destination
+      chapter.destination,
     );
     return;
   }
@@ -219,7 +220,7 @@ function addChapterToCache(destinationParam, chapterData) {
   // there is cached chapter for this serie but not the current one
   console.log(
     "adding chapter " + currentChapterNumber + " In store",
-    chapter.destination
+    chapter.destination,
   );
   storeForSourceSite.chaptersList.push(chapter);
   return;
@@ -230,7 +231,7 @@ function setReaderConfig(
   sourceSiteCode,
   pathTemplate,
   serieFragment,
-  chapterNumber
+  chapterNumber,
 ) {
   store.config.readerConfig.securityKey = securityKey;
   store.config.readerConfig.sourceSiteCode = sourceSiteCode;
