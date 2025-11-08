@@ -25,7 +25,7 @@ router.get("/login", async function (req, res) {
       });
     }
 
-    const resultValidation = new Authentification().verifyAccessToken(
+    const resultValidation = await new Authentification().verifyAccessToken(
       token,
       userID,
     );
@@ -40,13 +40,11 @@ router.get("/login", async function (req, res) {
     }
 
     // user have an active session open
-    return res.render("index", {
-      title: "MtlParsorAI",
-      destination: instanceSourceWebsite.getDestination("default"),
-      sitesSources: instanceSourceWebsite.getSourceWebsites(),
-    });
+    return res.redirect("/");
   } catch (e) {
-    return res.redirect("/login");
+    return res.render("login", {
+      title: "MtlParsorAI",
+    });
   }
 });
 
@@ -63,7 +61,7 @@ router.get("/create", async function (req, res) {
       });
     }
 
-    const resultValidation = new Authentification().verifyAccessToken(
+    const resultValidation = await new Authentification().verifyAccessToken(
       token,
       userID,
     );
@@ -106,7 +104,7 @@ router.post("/auth/login", async function (req, res) {
     httpOnly: true, // protect from JS access
     secure: true, // send only via HTTPS
     sameSite: "strict",
-    maxAge: 24 * 60 * 60 * 1000, // 1 day
+    maxAge: 14 * 60 * 1000, // 14 min
     path: "/",
   });
 
@@ -114,7 +112,7 @@ router.post("/auth/login", async function (req, res) {
     httpOnly: false,
     secure: true,
     sameSite: "strict",
-    maxAge: 24 * 60 * 60 * 1000,
+    maxAge: 24 * 60 * 60 * 1000, // 1 day
     path: "/",
   });
   res.status(200).send({
@@ -124,8 +122,14 @@ router.post("/auth/login", async function (req, res) {
   return;
 });
 
-router.get("/auth/logout", (_, res) => {
+router.post("/auth/logout", async (req, res) => {
   try {
+    const token = req.cookies["accessToken"];
+    const instance = new Authentification();
+    if (req.user?.userID) {
+      await instance.logout(token, req.user.userID);
+    }
+
     // Clear cookies if they exist
     res.clearCookie("accessToken", {
       path: "/",

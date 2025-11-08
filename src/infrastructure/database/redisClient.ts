@@ -58,6 +58,17 @@ class RedisUsersStore {
       .exec();
   }
 
+  public async updateUserByID(id: string, user: UserDB): Promise<boolean> {
+    const key = this.userKeyPrefix + id;
+
+    // Optional safety: check that user exists before updating
+    const exists = await this.redis.exists(key);
+    if (!exists) return false;
+
+    await this.redis.set(key, JSON.stringify(user));
+    return true;
+  }
+
   public async getUserByID(id: string): Promise<UserDB | null> {
     const data = await this.redis.get(this.userKeyPrefix + id);
     return data ? JSON.parse(data) : null;

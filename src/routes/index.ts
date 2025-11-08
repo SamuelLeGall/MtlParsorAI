@@ -26,7 +26,7 @@ router.get("/", async (req, res) => {
       return res.redirect("/login");
     }
 
-    const resultValidation = new Authentification().verifyAccessToken(
+    const resultValidation = await new Authentification().verifyAccessToken(
       token,
       userID,
     );
