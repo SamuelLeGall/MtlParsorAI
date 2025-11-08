@@ -167,4 +167,47 @@ router.post("/auth/create", async function (req, res) {
   return;
 });
 
+router.post("/auth/refreshToken", async function (req, res) {
+  // token was already verified in the verifyJWT middlware
+  const token = req.cookies["accessToken"];
+  const instance = new Authentification();
+  if (!req.user?.userID) {
+    res.status(403).send("An Error Occured!");
+    return;
+  }
+
+  const result = await instance.refreshToken(token, req.user.userID);
+  if (ResultFactory.isError(result)) {
+    const [, errorRefresh] = result;
+    errorRefresh.logToConsole();
+    res
+      .status(errorRefresh.code === "UNEXPECTED_ERROR" ? 500 : 403)
+      .send(errorRefresh.getPublicMessage());
+    return;
+  }
+
+  const [data] = result;
+  // Store both cookies
+  res.cookie("accessToken", data.accessToken, {
+    httpOnly: true, // protect from JS access
+    secure: true, // send only via HTTPS
+    sameSite: "strict",
+    maxAge: 14 * 60 * 1000, // 14 min
+    path: "/",
+  });
+
+  res.cookie("userID", data.userID, {
+    httpOnly: false,
+    secure: true,
+    sameSite: "strict",
+    maxAge: 24 * 60 * 60 * 1000, // 1 day
+    path: "/",
+  });
+  res.status(200).send({
+    success: true,
+    userID: req.user?.userID,
+  });
+  return;
+});
+
 export default router;

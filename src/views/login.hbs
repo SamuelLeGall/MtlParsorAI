@@ -54,6 +54,7 @@
 
             // Cookies are automatically set by the backend now
             window.location.href = "/";
+            window.authRefresh.start();
         } catch (err) {
             console.error(err);
             errorEl.textContent = "An unexpected error occurred.";

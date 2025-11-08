@@ -8,12 +8,25 @@ import {
   ErrorFactory,
   ErrorSeverity,
 } from "../../models/appError";
-import jwt from "jsonwebtoken";
+import jwt, { SignOptions } from "jsonwebtoken";
 import { UserDB } from "../../models/users";
 import validator from "validator";
 
 export class Authentification {
   private privateKey = ":fr6UoOO4b7nrlC07KAlh6y6Na-qawxsVMr8tRHHL";
+
+  private generateJWT = (
+    userID: string,
+    expiresIn: SignOptions["expiresIn"],
+  ): string => {
+    return jwt.sign(
+      {
+        userID,
+      },
+      this.privateKey,
+      { expiresIn },
+    );
+  };
 
   private validateAndNormalizeUsername(username: string): Result<string> {
     try {
@@ -263,13 +276,7 @@ export class Authentification {
       const [user] = responseCheckUser;
 
       // generate access token
-      const accessToken = jwt.sign(
-        {
-          userID: user.id,
-        },
-        this.privateKey,
-        { expiresIn: "15min" },
-      );
+      const accessToken = this.generateJWT(user.id, "15min");
 
       user.activeAccessTokens = this.removeExpiredAccountAccessTokens(
         user.activeAccessTokens,
@@ -286,6 +293,59 @@ export class Authentification {
         null,
         ErrorFactory.unexpectedError(
           ErrorFactory.createContext("Service", "login", {}),
+          e,
+        ),
+      ];
+    }
+  }
+
+  public async refreshToken(
+    accessToken: string,
+    userID: string,
+  ): Promise<Result<{ accessToken: string; userID: string }>> {
+    try {
+      // generate refreshToken
+      const newAccessToken = this.generateJWT(userID, "15min");
+
+      // fetch the user
+      const usersRepo = new UsersRepository();
+      const user = await usersRepo.fetchByID(userID);
+      if (!user) {
+        return [
+          null,
+          new AppError(
+            `Can't find the user for this id`,
+            AppErrorCodes.INVALID_INPUT,
+            ErrorCategory.DOMAIN,
+            ErrorSeverity.LOW,
+            ErrorFactory.createContext("Service", "refreshToken", {
+              userID,
+            }),
+            {
+              userMessage: `An error occured`,
+              isRecoverable: false,
+            },
+          ),
+        ];
+      }
+
+      // we remove expired tokens and invalidate the currently use one and add the new one
+      user.activeAccessTokens = this.removeExpiredAccountAccessTokens(
+        user.activeAccessTokens,
+      );
+      user.activeAccessTokens = user.activeAccessTokens.filter(
+        (el) => el !== accessToken,
+      );
+      user.activeAccessTokens.push(newAccessToken);
+
+      await usersRepo.updateByID(user.id, user);
+
+      return [{ accessToken: newAccessToken, userID: user.id }, null];
+    } catch (e) {
+      return [
+        null,
+        ErrorFactory.unexpectedError(
+          ErrorFactory.createContext("Service", "refreshToken", {}),
           e,
         ),
       ];
