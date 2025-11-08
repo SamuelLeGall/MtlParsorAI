@@ -122,6 +122,25 @@ router.post("/login", async function (req, res) {
   return;
 });
 
+router.get("/logout", (req, res) => {
+  try {
+    // Clear cookies if they exist
+    res.clearCookie("accessToken", {
+      path: "/",
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+    });
+    res.clearCookie("userID", { path: "/", secure: true, sameSite: "strict" });
+  } catch (err) {
+    console.warn("Logout warning: could not clear all cookies", err);
+    // continue anyway
+  }
+
+  // Redirect to login page
+  return res.redirect("/login");
+});
+
 router.post("/create", async function (req, res) {
   const instance = new Authentification();
   const result = await instance.create(
