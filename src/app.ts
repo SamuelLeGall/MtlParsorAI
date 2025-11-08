@@ -110,9 +110,9 @@ app.use((req, res, next) => {
 });
 
 app.use("/", indexRoute);
-app.use("/auth", authRoute);
-app.use("/user", usersRoute);
-app.use("/chapters", chaptersRoute);
+app.use("/", authRoute);
+app.use("/", usersRoute);
+app.use("/", chaptersRoute);
 
 // Apply to all routes
 export function verifyJWT() {

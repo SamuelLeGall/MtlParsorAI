@@ -1,4 +1,3 @@
-import router from "./index";
 import { Authentification } from "../business/auth/Authentification";
 import { ResultFactory } from "../models/response";
 import { sourceWebsiteManager } from "../business/sourcesWebsites/sourceWebsiteManager";
@@ -6,10 +5,13 @@ import {
   destinationBase,
   sourcesWebsites,
 } from "../business/sourcesWebsites/sourceWebsitesData";
+import { Router } from "express";
+
 const instanceSourceWebsite = new sourceWebsiteManager(
   destinationBase,
   sourcesWebsites,
 );
+const router = Router();
 router.get("/login", async function (req, res) {
   // return the processed chapter
   const userID = req.cookies["userID"];
@@ -86,7 +88,7 @@ router.get("/create", async function (req, res) {
   }
 });
 
-router.post("/login", async function (req, res) {
+router.post("/auth/login", async function (req, res) {
   const instance = new Authentification();
   const result = await instance.login(req.body.username, req.body.password);
   if (ResultFactory.isError(result)) {
@@ -122,7 +124,7 @@ router.post("/login", async function (req, res) {
   return;
 });
 
-router.get("/logout", (req, res) => {
+router.get("/auth/logout", (_, res) => {
   try {
     // Clear cookies if they exist
     res.clearCookie("accessToken", {
@@ -141,7 +143,7 @@ router.get("/logout", (req, res) => {
   return res.redirect("/login");
 });
 
-router.post("/create", async function (req, res) {
+router.post("/auth/create", async function (req, res) {
   const instance = new Authentification();
   const result = await instance.create(
     req.body.username,
