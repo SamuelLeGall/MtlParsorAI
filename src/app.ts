@@ -111,7 +111,7 @@ app.use((req, res, next) => {
 
 app.use("/", indexRoute);
 app.use("/auth", authRoute);
-app.use("/users", usersRoute);
+app.use("/user", usersRoute);
 app.use("/chapters", chaptersRoute);
 
 // Apply to all routes
