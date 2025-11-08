@@ -1,4 +1,3 @@
-import router from "./index";
 import { Authentification } from "../business/auth/Authentification";
 import { ResultFactory } from "../models/response";
 import { sourceWebsiteManager } from "../business/sourcesWebsites/sourceWebsiteManager";
@@ -6,10 +5,13 @@ import {
   destinationBase,
   sourcesWebsites,
 } from "../business/sourcesWebsites/sourceWebsitesData";
+import { Router } from "express";
+
 const instanceSourceWebsite = new sourceWebsiteManager(
   destinationBase,
   sourcesWebsites,
 );
+const router = Router();
 router.get("/login", async function (req, res) {
   // return the processed chapter
   const userID = req.cookies["userID"];
@@ -23,7 +25,7 @@ router.get("/login", async function (req, res) {
       });
     }
 
-    const resultValidation = new Authentification().verifyAccessToken(
+    const resultValidation = await new Authentification().verifyAccessToken(
       token,
       userID,
     );
@@ -38,13 +40,11 @@ router.get("/login", async function (req, res) {
     }
 
     // user have an active session open
-    return res.render("index", {
-      title: "MtlParsorAI",
-      destination: instanceSourceWebsite.getDestination("default"),
-      sitesSources: instanceSourceWebsite.getSourceWebsites(),
-    });
+    return res.redirect("/");
   } catch (e) {
-    return res.redirect("/login");
+    return res.render("login", {
+      title: "MtlParsorAI",
+    });
   }
 });
 
@@ -61,7 +61,7 @@ router.get("/create", async function (req, res) {
       });
     }
 
-    const resultValidation = new Authentification().verifyAccessToken(
+    const resultValidation = await new Authentification().verifyAccessToken(
       token,
       userID,
     );
@@ -86,7 +86,7 @@ router.get("/create", async function (req, res) {
   }
 });
 
-router.post("/login", async function (req, res) {
+router.post("/auth/login", async function (req, res) {
   const instance = new Authentification();
   const result = await instance.login(req.body.username, req.body.password);
   if (ResultFactory.isError(result)) {
@@ -104,7 +104,7 @@ router.post("/login", async function (req, res) {
     httpOnly: true, // protect from JS access
     secure: true, // send only via HTTPS
     sameSite: "strict",
-    maxAge: 24 * 60 * 60 * 1000, // 1 day
+    maxAge: 14 * 60 * 1000, // 14 min
     path: "/",
   });
 
@@ -112,7 +112,7 @@ router.post("/login", async function (req, res) {
     httpOnly: false,
     secure: true,
     sameSite: "strict",
-    maxAge: 24 * 60 * 60 * 1000,
+    maxAge: 24 * 60 * 60 * 1000, // 1 day
     path: "/",
   });
   res.status(200).send({
@@ -122,7 +122,32 @@ router.post("/login", async function (req, res) {
   return;
 });
 
-router.post("/create", async function (req, res) {
+router.post("/auth/logout", async (req, res) => {
+  try {
+    const token = req.cookies["accessToken"];
+    const instance = new Authentification();
+    if (req.user?.userID) {
+      await instance.logout(token, req.user.userID);
+    }
+
+    // Clear cookies if they exist
+    res.clearCookie("accessToken", {
+      path: "/",
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+    });
+    res.clearCookie("userID", { path: "/", secure: true, sameSite: "strict" });
+  } catch (err) {
+    console.warn("Logout warning: could not clear all cookies", err);
+    // continue anyway
+  }
+
+  // Redirect to login page
+  return res.redirect("/login");
+});
+
+router.post("/auth/create", async function (req, res) {
   const instance = new Authentification();
   const result = await instance.create(
     req.body.username,
@@ -141,4 +166,5 @@ router.post("/create", async function (req, res) {
   res.sendStatus(201);
   return;
 });
+
 export default router;

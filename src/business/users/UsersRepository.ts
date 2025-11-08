@@ -29,6 +29,7 @@ export class UsersRepository {
       active: true,
       created: new Date(),
       roles: [],
+      activeAccessTokens: [],
     };
 
     if (adminRoleEnabled) {
@@ -45,6 +46,10 @@ export class UsersRepository {
 
   public async fetchByUsername(username: string): Promise<UserDB | null> {
     return this.db.getUserByUsername(username);
+  }
+
+  public async updateByID(id: string, user: UserDB): Promise<boolean> {
+    return this.db.updateUserByID(id, user);
   }
 
   public async fetchByID(id: string): Promise<UserDB | null> {

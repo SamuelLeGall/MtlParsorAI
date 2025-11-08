@@ -187,6 +187,26 @@ export class Authentification {
     return [user, null];
   }
 
+  private removeExpiredAccountAccessTokens(
+    activeAccessTokensInDB: UserDB["activeAccessTokens"],
+  ): UserDB["activeAccessTokens"] {
+    const result: UserDB["activeAccessTokens"] = [];
+    activeAccessTokensInDB.forEach((accessTokenDB) => {
+      try {
+        const payload = jwt.verify(accessTokenDB, this.privateKey) as {
+          userID: string;
+        };
+        if (payload) {
+          result.push(accessTokenDB);
+        }
+      } catch (_) {
+        // token expired
+      }
+    });
+
+    return result;
+  }
+
   public async login(
     username: string,
     password: string,
@@ -248,8 +268,17 @@ export class Authentification {
           userID: user.id,
         },
         this.privateKey,
-        { expiresIn: "24h" },
+        { expiresIn: "15min" },
       );
+
+      user.activeAccessTokens = this.removeExpiredAccountAccessTokens(
+        user.activeAccessTokens,
+      );
+      user.activeAccessTokens.push(accessToken);
+      user.lastConnexion = new Date();
+
+      const usersRepo = new UsersRepository();
+      await usersRepo.updateByID(user.id, user);
 
       return [{ accessToken, userID: user.id }, null];
     } catch (e) {
@@ -365,10 +394,10 @@ export class Authentification {
     }
   }
 
-  public verifyAccessToken(
+  public async verifyAccessToken(
     accessToken: string,
     expectedUserIDParam: string,
-  ): Result<{ userID: string }> {
+  ): Promise<Result<{ userID: string }>> {
     let payload;
     try {
       payload = jwt.verify(accessToken, this.privateKey) as {
@@ -377,10 +406,16 @@ export class Authentification {
       const userIDSanitized = validator.escape(payload.userID);
       const expectedUserIDSanitized = validator.escape(expectedUserIDParam);
 
+      const usersRepo = new UsersRepository();
+      const user = await usersRepo.fetchByID(userIDSanitized);
+
       // Check that userID in params matches token userID
       if (
         !expectedUserIDSanitized ||
-        (expectedUserIDSanitized && expectedUserIDSanitized !== userIDSanitized)
+        (expectedUserIDSanitized &&
+          expectedUserIDSanitized !== userIDSanitized) ||
+        !user ||
+        !user.activeAccessTokens.includes(accessToken)
       ) {
         return [
           null,
@@ -409,6 +444,29 @@ export class Authentification {
           e,
         ),
       ];
+    }
+  }
+
+  public async logout(accessToken: string, userID: UserDB["id"]) {
+    try {
+      const usersRepo = new UsersRepository();
+
+      const user = await usersRepo.fetchByID(userID);
+      if (!user) {
+        return;
+      }
+
+      // we remove expired tokens and invalidate the currently use one
+      user.activeAccessTokens = this.removeExpiredAccountAccessTokens(
+        user.activeAccessTokens,
+      );
+      user.activeAccessTokens = user.activeAccessTokens.filter(
+        (el) => el !== accessToken,
+      );
+
+      await usersRepo.updateByID(user.id, user);
+    } catch (_) {
+      // RAS
     }
   }
 }

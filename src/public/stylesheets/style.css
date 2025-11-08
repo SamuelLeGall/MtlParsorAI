@@ -96,7 +96,9 @@ button:focus {
 a {
   color: #00B7FF;
 }
-
+.flex-row {
+  display: flex;
+}
 .flex-column {
   display: flex;
   flex-direction: column;

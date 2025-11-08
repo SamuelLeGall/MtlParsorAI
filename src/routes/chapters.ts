@@ -3,10 +3,11 @@ import {
   sourcesWebsites,
 } from "../business/sourcesWebsites/sourceWebsitesData";
 import { generativeTextOrchestrator } from "../business/textProcessing/generativeTextOrchestrator";
-import router from "./index";
 import { sourceWebsiteManager } from "../business/sourcesWebsites/sourceWebsiteManager";
+import { Router } from "express";
+const router = Router();
 
-router.post("/load", async function (req, res) {
+router.post("/chapter/load", async function (req, res) {
   const destination = req.body.destination || destinationBase;
   const allowBiggerLimit: boolean = Boolean(req.body.allowBiggerLimit) || false;
   const instanceSourceWebsite = new sourceWebsiteManager(

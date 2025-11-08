@@ -5,6 +5,7 @@ export interface UserDB {
   passwordHash: string;
   active: boolean;
   created: Date | string;
-  lastConnexion?: Date;
   roles: UserRole[];
+  activeAccessTokens: string[];
+  lastConnexion?: Date;
 }

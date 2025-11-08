@@ -110,13 +110,13 @@ app.use((req, res, next) => {
 });
 
 app.use("/", indexRoute);
-app.use("/auth", authRoute);
-app.use("/users", usersRoute);
-app.use("/chapters", chaptersRoute);
+app.use("/", authRoute);
+app.use("/", usersRoute);
+app.use("/", chaptersRoute);
 
 // Apply to all routes
 export function verifyJWT() {
-  return (req: any, res: any, next: any) => {
+  return async (req: any, res: any, next: any) => {
     try {
       const userID = req.cookies["userID"];
       const token = req.cookies["accessToken"];
@@ -126,14 +126,10 @@ export function verifyJWT() {
           AppErrorCodes.ACTION_NOT_ALLOWED,
           ErrorCategory.DOMAIN,
           ErrorSeverity.MEDIUM,
-          ErrorFactory.createContext(
-            "Service",
-            "validateAndNormalizePassword",
-            {
-              userID: userID,
-              accessToken: token,
-            },
-          ),
+          ErrorFactory.createContext("Service", "verifyJWT", {
+            userID: userID,
+            accessToken: token,
+          }),
           {
             userMessage: `An error occured, try again later.`,
             isRecoverable: false,
@@ -146,7 +142,7 @@ export function verifyJWT() {
         });
       }
 
-      const resultValidation = new Authentification().verifyAccessToken(
+      const resultValidation = await new Authentification().verifyAccessToken(
         token,
         userID,
       );
