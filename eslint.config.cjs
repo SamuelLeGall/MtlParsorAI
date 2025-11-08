@@ -25,6 +25,8 @@ module.exports = defineConfig([
         localStorage: "readonly",
         fetch: "readonly",
         scrollTo: "readonly",
+        clearTimeout: "readonly",
+        setTimeout: "readonly",
       },
     },
   },
