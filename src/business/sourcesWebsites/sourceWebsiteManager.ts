@@ -1,37 +1,8 @@
 import axios from "axios";
 import { load } from "cheerio";
-import { sourceWebsitesSelect, wtrLabModel } from "../../models/sourceWebsite";
-import { destination } from "../../models/contexte";
+import { wtrLabModel } from "../../models/sourceWebsite";
 
 export class sourceWebsiteManager {
-  private destinations: destination[];
-  private configSourceWebsite: sourceWebsitesSelect[];
-
-  constructor(
-    destination: destination,
-    configSourceWebsite: sourceWebsitesSelect[],
-  ) {
-    this.destinations = [destination];
-    this.configSourceWebsite = configSourceWebsite;
-  }
-
-  getSourceWebsites(): sourceWebsitesSelect[] {
-    return this.configSourceWebsite;
-  }
-
-  getDestination(userId: string): destination | undefined {
-    return this.destinations.find(
-      (destination) => destination.userId === userId,
-    );
-  }
-
-  updateDestination(destination: destination): void {
-    const index = this.destinations.findIndex(
-      (destination) => destination.userId === destination.userId,
-    );
-    this.destinations[index] = destination;
-  }
-
   private async fetchUrlHTML(url: string) {
     try {
       const response = await axios.get(url);
@@ -45,20 +16,21 @@ export class sourceWebsiteManager {
     }
   }
 
-  private buildUrl(destination: destination): string {
-    let url = destination.urlParam;
-    destination.params.forEach((param) => {
-      if (param.code && destination.urlParam.includes(`<${param.code}>`)) {
-        url = url.replace(`<${param.code}>`, param.value.toString());
-      }
-    });
-    return url;
+  private buildUrl(): string {
+    // let url = destination.urlParam;
+    // destination.params.forEach((param) => {
+    //   if (param.code && destination.urlParam.includes(`<${param.code}>`)) {
+    //     url = url.replace(`<${param.code}>`, param.value.toString());
+    //   }
+    // });
+    // return url;
+    return "";
   }
 
-  async fetchChapterText(destination: destination) {
+  public async fetchChapterText() {
     let url = "";
     try {
-      url = this.buildUrl(destination);
+      url = this.buildUrl();
       console.log(`url is ${url}`);
       const response = await this.fetchUrlHTML(url);
 

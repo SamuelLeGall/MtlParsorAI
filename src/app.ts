@@ -9,7 +9,6 @@ import indexRoute from "./routes/index";
 import authRoute from "./routes/auth";
 import usersRoute from "./routes/users";
 import chaptersRoute from "./routes/chapters";
-import { destination } from "./models/contexte";
 import { Authentification } from "./business/auth/Authentification";
 import { ResultFactory } from "./models/response";
 import {
@@ -20,8 +19,7 @@ import {
   ErrorSeverity,
 } from "./models/appError";
 import { RedisClient } from "./infrastructure/database/redisClient";
-
-// Watch for changes in views and public directories
+import { seedRedis } from "./data/seedRedis";
 
 // Get __filename and __dirname in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -32,6 +30,7 @@ const app = express();
 // load the redis singleton
 const redisClient = RedisClient.getInstance();
 await redisClient.connect();
+await seedRedis(redisClient);
 
 // ----------- DEV ONLY: Livereload -----------
 if (process.env.NODE_ENV === "development") {
@@ -63,32 +62,39 @@ if (process.env.NODE_ENV === "development") {
 app.set("views", join(__dirname, "views"));
 app.set("view engine", "hbs");
 
-hbs.registerHelper("json", (context: any) => {
-  return JSON.stringify(context);
-});
 hbs.registerHelper(
-  "IsNotFirstChapter",
-  (
-    destination: destination,
+  "ifEqual",
+  function (
+    this: any,
+    valueA: any,
+    valueB: any,
     options: {
       fn: (context: any) => any;
       inverse: (context: any) => any;
     },
-  ) => {
-    if (!destination) {
-      return options.inverse(this);
-    }
-    let chapterNumber =
-      destination.params.find((el) => el.code === "CHAPTER_NUMBER")?.value ?? 0;
-    if (typeof chapterNumber === "string") {
-      chapterNumber = parseInt(chapterNumber);
-    }
-    if (Number.isNaN(chapterNumber)) {
-      return options.inverse(this);
-    }
-    return chapterNumber > 1 ? options.fn(this) : options.inverse(this);
+  ) {
+    return valueA === valueB ? options.fn(this) : options.inverse(this);
   },
 );
+
+hbs.registerHelper(
+  "ifDifferent",
+  function (
+    this: any,
+    valueA: any,
+    valueB: any,
+    options: {
+      fn: (context: any) => any;
+      inverse: (context: any) => any;
+    },
+  ) {
+    return valueA !== valueB ? options.fn(this) : options.inverse(this);
+  },
+);
+
+hbs.registerHelper("json", (context: any) => {
+  return JSON.stringify(context);
+});
 
 // Setup middleware
 app.use(logger("dev"));
@@ -103,7 +109,7 @@ app.use((req, res, next) => {
   // Skip public routes if you want
   const publicViewsPaths = ["/create", "/login"];
   const publicPostPaths = ["/auth/create", "/auth/login"];
-  const publicPaths = ["/", ...publicViewsPaths, ...publicPostPaths];
+  const publicPaths = [...publicViewsPaths, ...publicPostPaths];
   if (publicPaths.includes(req.path)) return next();
 
   return verifyJWT()(req, res, next);
@@ -131,15 +137,13 @@ export function verifyJWT() {
             accessToken: token,
           }),
           {
-            userMessage: `An error occured, try again later.`,
+            userMessage: `Your session expired, please log in to access this page.`,
             isRecoverable: false,
           },
         );
         error.logToConsole();
-        return res.render("error", {
-          title: "Error",
-          errorAI: error.getPublicMessage(),
-        });
+        res.cookie("flashError", error.getPublicMessage(), { maxAge: 2000 });
+        return res.redirect("/login");
       }
 
       const resultValidation = await new Authentification().verifyAccessToken(
@@ -149,9 +153,12 @@ export function verifyJWT() {
       if (ResultFactory.isError(resultValidation)) {
         const [, errorValidation] = resultValidation;
         errorValidation.logToConsole();
-        return res
-          .status(errorValidation.code === "UNEXPECTED_ERROR" ? 500 : 403)
-          .send(errorValidation.getPublicMessage());
+        res.cookie(
+          "flashError",
+          "Your session expired, please log in to access this page.",
+          { maxAge: 2000 },
+        );
+        return res.redirect("/login");
       }
 
       // Attach user info to request

@@ -1,8 +1,11 @@
-<h3>Welcome to {{title}}</h3>
-<hr style="width: 100%; margin: 1em 0">
+<div class="header">
+    <div class="img-container">
+        <img src="/images/logo.svg" alt="MtlParsorAI Logo">
+    </div>
+</div>
 
 <div class="flex-column gap-half-em" style="align-items: center;">
-    <h4>Connexion</h4>
+    <h3>Connexion</h3>
 
     <div class="grid-container-2" style="max-width: 400px;">
         <label for="username">Username</label>
@@ -14,6 +17,7 @@
 
     <button onclick="login()" style="margin-top: 1em;">Login</button>
     <p id="login-error" style="color: rgb(240, 128, 128); display: none;"></p>
+    <p id="login-error-backend" style="color: rgb(240, 128, 128);">{{errorMessage}}</p>
     <p style="margin-top: 1em;">
         Don’t have an account yet?
         <a href="/create">Create one</a>
@@ -53,7 +57,7 @@
             }
 
             // Cookies are automatically set by the backend now
-            window.location.href = "/";
+            window.location.href = "/bookmark";
             window.authRefresh.start();
         } catch (err) {
             console.error(err);

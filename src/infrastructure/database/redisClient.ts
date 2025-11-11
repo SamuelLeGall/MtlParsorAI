@@ -1,6 +1,7 @@
 import { createClient, RedisClientType } from "redis";
 import { UserDB } from "../../models/users";
 import { BookDB, BookmarkDB } from "../../models/bookmark";
+import { ChapterDB } from "../../models/chapter";
 
 export class RedisClient {
   private static instance: RedisClient;
@@ -55,6 +56,14 @@ export class RedisClient {
   public getBookmarksStore(): RedisBookmarksStore {
     if (!this.redis) throw new Error("Redis not initialized.");
     return new RedisBookmarksStore(this.redis);
+  }
+
+  // ---------------------------------------------------------
+  //  CHAPTER SCOPE
+  // ---------------------------------------------------------
+  public getChaptersStore(): RedisChaptersStore {
+    if (!this.redis) throw new Error("Redis not initialized.");
+    return new RedisChaptersStore(this.redis);
   }
 }
 
@@ -252,6 +261,141 @@ class RedisBooksStore {
   /** Check if a book exists */
   public async exists(id: string): Promise<boolean> {
     const exists = await this.redis.exists(this.bookKey(id));
+    return exists === 1;
+  }
+}
+
+// =========================================================
+// CHAPTERS STORE
+// =========================================================
+class RedisChaptersStore {
+  private readonly bookKeyPrefix = "book:";
+  private readonly chapterKeyPrefix = "chapter:";
+
+  constructor(private redis: RedisClientType) {}
+
+  private bookKey(id: string): string {
+    return `${this.bookKeyPrefix}${id}`;
+  }
+
+  private chapterKey(bookID: string, chapterNumber: number): string {
+    return `${this.bookKey(bookID)}:${this.chapterKeyPrefix}${chapterNumber}`;
+  }
+
+  private chapterLockKey(bookID: string, chapterNumber: number): string {
+    return `${this.chapterKey(bookID, chapterNumber)}:lock`;
+  }
+
+  /** Create or update a chapter entry */
+  public async saveChapter(
+    bookID: string,
+    chapterNumber: number,
+    chapter: ChapterDB,
+    exp = 60 * 60 * 24 * 30, // 30 days
+  ): Promise<void> {
+    await this.redis.set(
+      this.chapterKey(bookID, chapterNumber),
+      JSON.stringify(chapter),
+      {
+        expiration: {
+          type: "EX",
+          value: exp,
+        },
+      },
+    );
+  }
+
+  /**
+   * Create a lock entry for a specific chapter. If one Already exists, we dont do anything.
+   * Returns true if lock created, false if one exist
+   */
+  public async createChapterLock(
+    bookID: string,
+    chapterNumber: number,
+    exp = 60 * 5, // 5 min
+  ): Promise<boolean> {
+    const success = await this.redis.set(
+      this.chapterLockKey(bookID, chapterNumber),
+      "locked",
+      {
+        expiration: {
+          type: "EX",
+          value: exp,
+        },
+        condition: "NX", // Only set the key if it does not already exist
+      },
+    );
+    return success === "OK";
+  }
+
+  /** Fetch one chapter by bookID and chapter number */
+  public async getChapter(
+    bookID: string,
+    chapterNumber: number,
+  ): Promise<ChapterDB | null> {
+    const data = await this.redis.get(this.chapterKey(bookID, chapterNumber));
+    return data ? (JSON.parse(data) as ChapterDB) : null;
+  }
+
+  /** Delete one chapter by bookID and chapter number*/
+  public async deleteChapter(
+    bookID: string,
+    chapterNumber: number,
+  ): Promise<void> {
+    await this.redis.del(this.chapterKey(bookID, chapterNumber));
+  }
+
+  /** Delete one chapter lock by bookID and chapter number*/
+  public async deleteChapterLock(
+    bookID: string,
+    chapterNumber: number,
+  ): Promise<void> {
+    await this.redis.del(this.chapterLockKey(bookID, chapterNumber));
+  }
+
+  /**
+   * Bulk fetch several chapters at once.
+   * Returns a map of { chapterID: ChapterDB }
+   */
+  public async getChapters(
+    bookID: string,
+    chapterNumbers: number[],
+  ): Promise<Record<number, ChapterDB>> {
+    if (chapterNumbers.length === 0) return {};
+    const keys = chapterNumbers.map((chapterNumber) =>
+      this.chapterKey(bookID, chapterNumber),
+    );
+    const results = await this.redis.mGet(keys);
+
+    const chapters: Record<number, ChapterDB> = {};
+    chapterNumbers.forEach((chapterNumber, idx) => {
+      const raw = results[idx];
+      if (raw) {
+        chapters[chapterNumber] = JSON.parse(raw) as ChapterDB;
+      }
+    });
+    return chapters;
+  }
+
+  /** Check if a chapter exists */
+  public async chapterExists(
+    bookID: string,
+    chapterNumber: number,
+  ): Promise<boolean> {
+    const exists = await this.redis.exists(
+      this.chapterKey(bookID, chapterNumber),
+    );
+    return exists === 1;
+  }
+
+  /** Check if a chapter lock exists */
+  public async lockExists(
+    bookID: string,
+    chapterNumber: number,
+  ): Promise<boolean> {
+    const exists = await this.redis.exists(
+      this.chapterLockKey(bookID, chapterNumber),
+    );
     return exists === 1;
   }
 }

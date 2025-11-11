@@ -1,15 +1,10 @@
-import { sourceWebsiteCode } from "./sourceWebsite";
-
-export interface ReaderDataConfig {
-  sourceSiteCode: sourceWebsiteCode;
-  template: string;
-  values: Record<string, string | number>;
-}
+import { ReaderDataConfig } from "./readerConfig";
 
 export interface BookDB {
   id: string;
   name: string;
   author: string;
+  synopsis: string;
   readerDataConfigs: ReaderDataConfig[];
 }
 
@@ -17,12 +12,12 @@ export interface BookmarkDB {
   id: string;
   bookID: string;
   userID: string;
-  currentSourceSiteCode: sourceWebsiteCode;
+  currentSourceSiteCode: ReaderDataConfig["sourceSiteCode"];
   currentChapter: number;
   readerDataOverride?: ReaderDataConfig[];
 }
 
 export interface HydratedBookmark {
   bookmark: BookmarkDB;
-  book: BookDB | null;
+  book: BookDB;
 }

@@ -27,6 +27,7 @@ module.exports = defineConfig([
         scrollTo: "readonly",
         clearTimeout: "readonly",
         setTimeout: "readonly",
+        alert: "readonly",
       },
     },
   },

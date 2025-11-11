@@ -46,6 +46,7 @@ export class BookmarksRepository {
     if (!bookmark) return null;
 
     const book = await this.booksDB.getBook(bookmark.bookID);
+    if (!book) return null;
     return { bookmark, book };
   }
 

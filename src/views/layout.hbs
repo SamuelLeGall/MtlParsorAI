@@ -4,10 +4,16 @@
     <title>{{title}}</title>
     <link rel='stylesheet' href='/stylesheets/style.css' />
     <script type="module" src="/javascripts/main.js" defer></script>
-      <script type="module" src="/javascripts/auth.js" defer></script>
+    <script type="module" src="/javascripts/auth.js" defer></script>
   </head>
   <body>
-    
     {{{body}}}
   </body>
+  <script>
+      // we set some variable front from the back
+      let chapterViewResponse;
+      {{#if chapterViewResponse}}
+          chapterViewResponse = {{{json  chapterViewResponse }}};
+      {{/if}}
+  </script>
 </html>

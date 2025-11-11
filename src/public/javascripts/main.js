@@ -1,102 +1,102 @@
-import {
-  fetchCachedChapter,
-  addChapterToCache,
-  checkInitStore,
-  saveStoreToLocalStorage,
-  setReaderConfig,
-  fetchCachedReaderConfig,
-  setChapterNumber,
-} from "./cache.js";
-/* global destination */
+/* global chapterViewResponse */
 document.addEventListener("DOMContentLoaded", () => {
-  function toggleElementVisibility(id) {
-    const element = document.getElementById(id);
-
+  function showElement(element) {
     if (element && !element.classList.contains("visible")) {
       element.classList.add("visible");
+    }
+    if (element && element.classList.contains("hidden")) {
       element.classList.remove("hidden");
-    } else if (element) {
+    }
+  }
+  function hideElement(element) {
+    if (element && !element.classList.contains("hidden")) {
       element.classList.add("hidden");
+    }
+    if (element && element.classList.contains("visible")) {
       element.classList.remove("visible");
     }
   }
+  function toggleElementVisibility(id) {
+    const element = document.getElementById(id);
+    if (element && !element.classList.contains("visible")) {
+      showElement(element);
+    } else if (element) {
+      hideElement(element);
+    }
+  }
 
-  async function loadChapter(chapterNumber, allowBiggerLimit = false) {
+  async function loadChapter(
+    chapterNumber,
+    updateChapterNumber,
+    allowBiggerLimit = false,
+  ) {
     try {
-      let destinationToSend = destination;
-      if (
-        chapterNumber !==
-        destination.params.find((el) => el.code === "CHAPTER_NUMBER")?.value
-      ) {
-        destinationToSend = JSON.parse(JSON.stringify(destination));
-        destinationToSend.params.find(
-          (el) => el.code === "CHAPTER_NUMBER",
-        ).value = chapterNumber;
-      }
-      const destinationToSendChapterNumber = destinationToSend.params.find(
-        (el) => el.code === "CHAPTER_NUMBER",
-      ).value;
+      console.log(`fetching the chapter ${chapterNumber} by API`);
 
-      // destination is set in index.hbs using data from the back
-      const chapterStore = fetchCachedChapter(destinationToSend);
-
-      // chapter in the store, no need to call the api again
-      if (chapterStore) {
-        console.log(
-          "chapter " + destinationToSendChapterNumber + " is in the store",
-          chapterStore,
-        );
-        // we show the navbar under the chapter
-        toggleElementVisibility("navigation-under-chapter");
-        return chapterStore.data;
-      }
-
-      console.log(
-        "fetching the chapter " + destinationToSendChapterNumber + " by API",
-      );
-
-      const key = document.getElementById("temp-key-input").value;
-      let body = { destination: destinationToSend, key };
+      let body = {
+        chapterNumber,
+        bookmarkID: chapterViewResponse.bookmarkID,
+        updateChapterNumber,
+      };
       if (allowBiggerLimit) {
         body = { ...body, allowBiggerLimit: true };
       }
-      const response = await fetch("/load", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(body),
-      });
+
+      // Start both the fetch and the minimum delay timer
+      const [response] = await Promise.all([
+        fetch("chapter/load", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        }),
+        // Ensure total time >= 0.5 seconds
+        new Promise((resolve) => setTimeout(resolve, 500)),
+      ]);
 
       if (!response.ok) {
         document.getElementById("chapter-content").innerHTML =
           "<p>An error occured</p>";
-        throw new Error("Network response was not ok");
+        console.error("Network response was not ok");
+        return;
       }
 
-      const chapterHtml = await response.text(); // Get HTML response directly
-
-      // we save the response in the store with the correct urlData only if it not an error page
-      if (!chapterHtml.includes("<title>Error</title>")) {
-        // destination is about the current chapter, so we update the number is this shallow copy without affecting the original object
-        addChapterToCache(destinationToSend, chapterHtml);
+      if (response.url.includes("/login")) {
+        alert("Your session expired, please log in to access this page.");
+        window.location.href = "/login";
+        return;
       }
 
-      // we show the navbar under the chapter
-      toggleElementVisibility("navigation-under-chapter");
+      const { html, scriptData } = await response.json();
 
-      return chapterHtml;
+      if (updateChapterNumber) {
+        // we show the navbar under the chapter
+        const bottomNavBar = document.getElementById(
+          "navigation-under-chapter",
+        );
+        showElement(bottomNavBar);
+
+        // we update the front to use the backend data
+        syncNavigation(scriptData);
+      }
+
+      return html;
     } catch (error) {
       console.error("There was a problem with the fetch operation:", error);
       throw new Error("Error happened");
     }
   }
-  async function loadPreviousChapter(currentChapterNumber) {
+  async function loadPreviousChapter(
+    currentChapterNumber,
+    updateChapterNumber,
+  ) {
     try {
       if (!currentChapterNumber || currentChapterNumber <= 1) {
         return { success: false };
       }
-      const chapterData = await loadChapter(currentChapterNumber - 1);
+      const chapterData = await loadChapter(
+        currentChapterNumber - 1,
+        updateChapterNumber,
+      );
       return { success: true, chapterData };
     } catch (e) {
       return { success: false };
@@ -104,11 +104,13 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   async function loadCurrentChapter(
     currentChapterNumber,
+    updateChapterNumber,
     allowBiggerLimit = false,
   ) {
     try {
       const chapterData = await loadChapter(
         currentChapterNumber,
+        updateChapterNumber,
         allowBiggerLimit,
       );
       return { success: true, chapterData };
@@ -116,46 +118,26 @@ document.addEventListener("DOMContentLoaded", () => {
       return { success: false };
     }
   }
-  async function loadNextChapter(currentChapterNumber) {
+  async function loadNextChapter(currentChapterNumber, updateChapterNumber) {
     try {
-      const chapterData = await loadChapter(currentChapterNumber + 1);
+      const chapterData = await loadChapter(
+        currentChapterNumber + 1,
+        updateChapterNumber,
+      );
       return { success: true, chapterData };
     } catch (e) {
       return { success: false };
     }
   }
 
-  async function updateDestinationBack(newConfigDestination) {
-    try {
-      const key = document.getElementById("temp-key-input").value;
-      const response = await fetch("/destination", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          newConfigDestination,
-          key,
-        }),
-      });
-
-      if (!response.ok) {
-        document.getElementById("chapter-content").innerHTML =
-          "<p>An error occured</p>";
-        throw new Error("Network response was not ok");
-      }
-
-      return true;
-    } catch (error) {
-      console.error("There was a problem with the fetch operation:", error);
-      throw new Error("Error happened");
-    }
-  }
-
   async function showCurrentChapter(allowBiggerLimit = false) {
-    const { chapterNumber } = fetchCachedReaderConfig();
+    const currentChapter = chapterViewResponse.navigation.currentChapter;
     document.getElementById("chapter-content").innerHTML = "<p>loading...</p>";
-    const response = await loadCurrentChapter(chapterNumber, allowBiggerLimit);
+    const response = await loadCurrentChapter(
+      currentChapter,
+      false,
+      allowBiggerLimit,
+    );
     if (!response.success) {
       return;
     }
@@ -165,71 +147,50 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!allowBiggerLimit) {
       await Promise.all([
         // load next chapter first because more likely it's going to be visited instead of the previous one
-        loadNextChapter(chapterNumber),
+        loadNextChapter(currentChapter, false),
 
         // load previous chapter
-        loadPreviousChapter(chapterNumber),
+        loadPreviousChapter(currentChapter, false),
       ]);
     }
-
-    // we save the store into localStorage
-    saveStoreToLocalStorage();
   }
 
   async function showPreviousChapter() {
-    const { chapterNumber } = fetchCachedReaderConfig();
-    const lastChapter = chapterNumber - 1;
+    const currentChapter = chapterViewResponse.navigation.currentChapter;
+    const lastChapter = currentChapter - 1;
     document.getElementById("chapter-content").innerHTML = "<p>loading...</p>";
 
     // load previous chapter
-    const response = await loadPreviousChapter(chapterNumber);
+    const response = await loadPreviousChapter(currentChapter, true);
     if (!response.success) {
       return;
     }
     document.getElementById("chapter-content").innerHTML = response.chapterData; // Update the chapter content
     scrollTo({ behavior: "smooth", top: 0 });
 
-    // we update the current chapterNumber
-    setChapterNumber(lastChapter);
-
     await Promise.all([
-      // we tell the backend that we changed chapter (necessary because of the cached chapter)
-      await updateDestinationBack(destination),
-
-      // load 2 chapter before ( because we just updated the chapter number)
-      loadPreviousChapter(lastChapter),
+      // load 2 chapter before
+      loadPreviousChapter(lastChapter, false),
     ]);
-
-    // we save the store into localStorage
-    saveStoreToLocalStorage();
   }
 
   async function showNextChapter() {
-    const { chapterNumber } = fetchCachedReaderConfig();
-    const nextChapter = chapterNumber + 1;
+    const currentChapter = chapterViewResponse.navigation.currentChapter;
+    const nextChapter = currentChapter + 1;
     document.getElementById("chapter-content").innerHTML = "<p>loading...</p>";
 
     // load next chapter
-    const response = await loadNextChapter(chapterNumber);
+    const response = await loadNextChapter(currentChapter, true);
     if (!response.success) {
       return;
     }
     document.getElementById("chapter-content").innerHTML = response.chapterData; // Update the chapter content
     scrollTo({ behavior: "smooth", top: 0 });
 
-    // we update the current chapterNumber
-    setChapterNumber(nextChapter);
-
     await Promise.all([
-      // we tell the backend that we changed chapter (necessary because of the cached chapter)
-      updateDestinationBack(destination),
-
-      // load 2 chapter after ( because we just updated the chapter number)
-      loadNextChapter(nextChapter),
+      // load 2 chapter after
+      loadNextChapter(nextChapter, false),
     ]);
-
-    // we save the store into localStorage
-    saveStoreToLocalStorage();
   }
 
   async function showSpecificChapter() {
@@ -242,123 +203,66 @@ document.addEventListener("DOMContentLoaded", () => {
       chapterNumberToLoad;
 
     document.getElementById("chapter-content").innerHTML = "<p>loading...</p>";
-    const response = await loadCurrentChapter(chapterNumberToLoad);
+    const response = await loadCurrentChapter(chapterNumberToLoad, true);
     if (!response.success) {
       return;
     }
     document.getElementById("chapter-content").innerHTML = response.chapterData; // Update the chapter content
     scrollTo({ behavior: "smooth", top: 0 });
 
-    // we update the current chapterNumber
-    setChapterNumber(chapterNumberToLoad);
-
     await Promise.all([
-      // we tell the backend that we changed chapter (necessary because of the cached chapter)
-      updateDestinationBack(destination),
-
       // load next chapter first because more likely it's going to be visited instead of the previous one
-      loadNextChapter(chapterNumberToLoad),
+      loadNextChapter(chapterNumberToLoad, false),
 
       // load previous chapter
-      loadPreviousChapter(chapterNumberToLoad),
+      loadPreviousChapter(chapterNumberToLoad, false),
     ]);
-
-    // we save the store into localStorage
-    saveStoreToLocalStorage();
   }
 
-  async function saveConfigAndIdentity() {
-    // TODO on se crée une identité coté back ?
-    const securityKey = document.getElementById("temp-key-input").value;
-    const sourceSiteCode = document.getElementById("site-source-select").value;
-    const pathTemplate = document.getElementById("path-template-input").value;
-    const serieFragment = document.getElementById("serie-input").value;
-    const chapterNumberToLoad = parseInt(
-      document.getElementById("config-chapter-number-input").value,
-    );
-    // we update the duplicated fields
-    document.getElementById("selected-chapter-input").value =
-      chapterNumberToLoad;
+  function syncNavigation(chapterViewResponseUpdated) {
+    // eslint-disable-next-line no-global-assign
+    chapterViewResponse = chapterViewResponseUpdated;
+    if (
+      chapterViewResponse &&
+      chapterViewResponse.navigation &&
+      chapterViewResponse.navigation.currentChapter
+    ) {
+      const navigationChapterNumberTop = document.getElementById(
+        "selected-chapter-input-top",
+      );
+      const navigationChapterNumberBottom = document.getElementById(
+        "selected-chapter-input-bottom",
+      );
+      const btnPreviousTop = document.getElementById("prev-chapter-top");
+      const btnPreviousBottom = document.getElementById("prev-chapter-bottom");
 
-    // we update the destination with the input values
-    const destinationCreated = {
-      sourceSiteCode,
-      userId: "default",
-      urlParam: pathTemplate,
-      params: [
-        {
-          code: "SERIE_FRAGMENT",
-          value: serieFragment,
-        },
-        {
-          code: "CHAPTER_NUMBER",
-          value: chapterNumberToLoad,
-        },
-      ],
-    };
-    setReaderConfig(
-      securityKey,
-      sourceSiteCode,
-      pathTemplate,
-      serieFragment,
-      chapterNumberToLoad,
-    );
+      if (navigationChapterNumberTop) {
+        navigationChapterNumberTop.value =
+          chapterViewResponse.navigation.currentChapter;
+      }
 
-    // we udpate the destination
-    await updateDestinationBack(destinationCreated);
+      if (navigationChapterNumberBottom) {
+        navigationChapterNumberBottom.value =
+          chapterViewResponse.navigation.currentChapter;
+      }
 
-    // we save the store into localStorage
-    saveStoreToLocalStorage();
-
-    toggleElementVisibility("config-container");
-
-    // show the chapter
-    showCurrentChapter();
-  }
-
-  function onMounted() {
-    // we restore the store from localStorage if it exist on first page load
-    checkInitStore();
-
-    // we restore the inputs fields from the store values
-    const configReader = fetchCachedReaderConfig();
-
-    if (configReader.securityKey) {
-      document.getElementById("temp-key-input").value =
-        configReader.securityKey;
-    }
-    if (configReader.sourceSiteCode) {
-      document.getElementById("site-source-select").value =
-        configReader.sourceSiteCode;
-    }
-    if (configReader.serieFragment) {
-      document.getElementById("serie-input").value = configReader.serieFragment;
-    }
-    if (configReader.chapterNumber) {
-      document.getElementById("config-chapter-number-input").value =
-        configReader.chapterNumber;
-
-      // we update the duplicated fields
-      document.getElementById("selected-chapter-input").value =
-        configReader.chapterNumber;
-    }
-    if (configReader.pathTemplate) {
-      document.getElementById("path-template-input").value =
-        configReader.pathTemplate;
+      if (chapterViewResponse.navigation.isNotFirstChapter) {
+        showElement(btnPreviousTop);
+        showElement(btnPreviousBottom);
+      } else {
+        hideElement(btnPreviousTop);
+        hideElement(btnPreviousBottom);
+      }
     }
   }
-
-  onMounted();
 
   window.toggleElementVisibility = toggleElementVisibility;
   window.loadChapter = loadChapter;
   window.loadPreviousChapter = loadPreviousChapter;
   window.loadCurrentChapter = loadCurrentChapter;
   window.loadNextChapter = loadNextChapter;
-  window.updateDestinationBack = updateDestinationBack;
   window.showCurrentChapter = showCurrentChapter;
   window.showPreviousChapter = showPreviousChapter;
   window.showNextChapter = showNextChapter;
   window.showSpecificChapter = showSpecificChapter;
-  window.saveConfigAndIdentity = saveConfigAndIdentity;
 });

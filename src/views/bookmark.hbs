@@ -1,15 +1,56 @@
-<h3>{{title}}</h3>
-<div class="flex-row">
-    <a href="/">Go back to home</a>
+<div class="header">
+    <div class="img-container">
+        <img src="/images/logo.svg" alt="MtlParsorAI Logo">
+    </div>
+    <h2>Your Bookmarks</h2>
     <form action="/auth/logout" method="POST">
         <button type="submit">Logout</button>
     </form>
-</div><hr style="width: 100%; margin: 1em 0">
-<div>
-    Here will be all the books stored for you profil
 </div>
+<div>
+    {{#if bookmarks.length}}
+        <div class="bookmarks-container">
+            {{#each bookmarks}}
+                <div class="bookmark-card">
+                    <div class="bookmark-header">
+                        <div class="bookmark-title">{{this.book.name}}</div>
+                        <div class="bookmark-author">by {{this.book.author}}</div>
+                        <div class="bookmark-meta">
+                            Current chapter: {{this.bookmark.currentChapter}}<br />
+                        </div>
+                        <hr style="width: 100%" />
+                    </div>
+                    {{#if this.book.synopsis}}
+                        <div class="bookmark-synopsis">
+                            <h3>Synopsis:</h3>
+                            <p>{{this.book.synopsis}}</p>
+                        </div>
+                    {{/if}}
+                    <div class="bookmark-actions">
+                        {{#ifDifferent this.bookmark.currentChapter 1}}
+                            <form action="/chapter/initView" method="POST">
+                                <input type="hidden" name="bookmarkID" value="{{this.bookmark.id}}" />
+                                <input
+                                        type="hidden"
+                                        name="chapterNumber"
+                                        value="{{this.bookmark.currentChapter}}"
+                                />
+                                <button type="submit">
+                                    Continue
+                                </button>
+                            </form>
+                        {{/ifDifferent}}
+                        <form action="/chapter/initView" method="POST">
+                            <input type="hidden" name="bookmarkID" value="{{this.bookmark.id}}" />
+                            <input type="hidden" name="chapterNumber" value="1" />
+                            <button type="submit">Start from chapter 1</button>
+                        </form>
 
-<script>
-    // we set some variable front the back
-    let destination = {{{json  destination }}};
-</script>
+                    </div>
+                </div>
+            {{/each}}
+        </div>
+    {{else}}
+        <p>No bookmarks yet — start reading something new!</p>
+    {{/if}}
+</div>

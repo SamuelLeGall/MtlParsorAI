@@ -8,7 +8,7 @@ declare global {
       userID: UserDB["id"];
     }
 
-    interface Request {
+    interface Request extends express.Request {
       user?: UserPayload;
     }
   }

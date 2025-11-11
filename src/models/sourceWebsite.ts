@@ -1,3 +1,4 @@
+export type sourceWebsiteCode = "WTR_LAB" | "FAN_MTL";
 export interface wtrLabModel {
   props: {
     pageProps: {
@@ -11,11 +12,4 @@ export interface wtrLabModel {
       };
     };
   };
-}
-
-export type sourceWebsiteCode = "WTR_LAB" | "FAN_MTL";
-
-export interface sourceWebsitesSelect {
-  code: sourceWebsiteCode;
-  libelle: string;
 }
