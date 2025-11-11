@@ -193,14 +193,10 @@ document.addEventListener("DOMContentLoaded", () => {
     ]);
   }
 
-  async function showSpecificChapter() {
+  async function showSpecificChapter(chapterNumberInputID) {
     const chapterNumberToLoad = parseInt(
-      document.getElementById("selected-chapter-input").value,
+      document.getElementById(chapterNumberInputID).value,
     );
-
-    // we update the duplicated fields
-    document.getElementById("config-chapter-number-input").value =
-      chapterNumberToLoad;
 
     document.getElementById("chapter-content").innerHTML = "<p>loading...</p>";
     const response = await loadCurrentChapter(chapterNumberToLoad, true);
