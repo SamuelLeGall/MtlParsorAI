@@ -13,6 +13,20 @@
 
         <label for="password">Password</label>
         <input type="password" id="password" placeholder="Enter your password" required>
+
+        <div aria-hidden="true">
+            <label for="email"
+                   style="position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden;"
+            >email</label>
+            <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    autocomplete="off"
+                    tabindex="-1"
+                    style="position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden;"
+            >
+        </div>
     </div>
 
     <button onclick="login()" style="margin-top: 1em;">Login</button>
@@ -28,10 +42,17 @@
     async function login() {
         const username = document.getElementById("username").value.trim();
         const password = document.getElementById("password").value;
+        const email = document.getElementById("email").value.trim();
+
 
         const errorEl = document.getElementById("login-error");
         errorEl.style.display = "none";
         errorEl.textContent = "";
+
+        if (email !== "") {
+            console.warn("Bot detected");
+            return; // silently abort
+        }
 
         if (!username || !password) {
             errorEl.textContent = "Please fill in both fields.";
