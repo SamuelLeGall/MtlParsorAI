@@ -22,7 +22,7 @@ FROM node:20-alpine AS dev
 WORKDIR /app
 
 # Copy package files and tsconfig
-COPY package*.json tsconfig.json openaiSecret.json ./
+COPY package*.json tsconfig.json ./
 
 # Install all dependencies (including dev)
 RUN npm ci
@@ -50,9 +50,6 @@ RUN npm ci --omit=dev --ignore-scripts
 
 # Copy compiled JS from build stage
 COPY --from=build /app/dist ./dist
-
-# Copy secrets
-COPY openaiSecret.json ./dist
 
 EXPOSE 3000
 

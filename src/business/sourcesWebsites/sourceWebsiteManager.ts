@@ -62,6 +62,7 @@ export class sourceWebsiteManager {
       switch (this.readerConfig.sourceSiteCode) {
         case "FAN_MTL":
         default:
+          $("script").remove();
           console.log("source is fanmtl.com");
           chapterData.title =
             $(".chapter-header .content-wrap .titles h2").text() || "";

@@ -15,7 +15,7 @@ import { BookmarksRepository } from "../users/BookmarksRepository";
 import { defaultBookmarks } from "../../data/defaultBookmarks";
 
 export class Authentification {
-  private privateKey = ":fr6UoOO4b7nrlC07KAlh6y6Na-qawxsVMr8tRHHL";
+  private privateKey = process.env.JWT_PRIVATE_KEY!.trim();
 
   private generateJWT = (
     userID: string,
@@ -360,7 +360,7 @@ export class Authentification {
     authKey: string | undefined,
   ): Promise<Result<true>> {
     try {
-      if (!process.env.ADMIN_CREATION_SECRET) {
+      if (!process.env.ADMIN_CREATION_SECRET!.trim()) {
         return [
           null,
           new AppError(
@@ -410,7 +410,7 @@ export class Authentification {
       // we check the authorization key to create an account :
       const normalizedAuthKey = validator.escape(authKey?.trim() ?? "");
       const normalizeEnvAuthKey = validator.escape(
-        process.env.ADMIN_CREATION_SECRET.trim(),
+        process.env.ADMIN_CREATION_SECRET!.trim(),
       );
       const adminRoleEnabled = normalizedAuthKey === normalizeEnvAuthKey;
 
