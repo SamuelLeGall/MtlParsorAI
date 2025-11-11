@@ -86,8 +86,10 @@ Add an A record:
 | Type | Name          | Content        | TTL   |
 | ---- | ------------- |----------------| ----- |
 | A    | mtl-parsor-ai | YOUR_PUBLIC_IP | 14400 |
-TTL → keep 14400 (4 hours) or default
 
+
+
+TTL → keep 14400 (4 hours) or default
 Wait for DNS propagation. Then test with
 
 ````
