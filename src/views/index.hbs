@@ -1,78 +1,69 @@
-<h3>Welcomes to {{title}}</h3>
-<div class="flex-row">
-    <a href="/bookmark">My library</a>
+<div class="header">
+    <div class="img-container">
+        <img src="/images/logo.svg" alt="MtlParsorAI Logo">
+    </div>
+    <h2>Reading {{ chapterViewResponse.book.name }}</h2>
     <form action="/auth/logout" method="POST">
         <button type="submit">Logout</button>
     </form>
 </div>
-<hr style="width: 100%; margin: 1em 0">
-<div>
-    <div class="grid-container-2">
-        <h4>Reader Configuration</h4>
-        <button onclick="toggleElementVisibility('config-container')" style="width: fit-content;">Toggle</button>
+<div style="margin-top: 1em;width:100%">
+    <div class="navbar">
+        <a href="/bookmark">My library</a>
+        <div class="chapter-selection">
+            <button id="prev-chapter-top" onclick="showPreviousChapter()" class="{{#unless chapterViewResponse.navigation.isNotFirstChapter}}hidden{{/unless}}">&#x3c;</button>
+            <input type="text" id="selected-chapter-input-top" placeholder="Enter chapter N°" required value="{{chapterViewResponse.navigation.currentChapter}}">
+            <button onclick="showSpecificChapter('selected-chapter-input-top')">Go</button>
+            <button id="next-chapter-top" onclick="showNextChapter()">&#x3e;</button>
+        </div>
+        <img width="20px" height="20px" src="/images/settings.svg" alt="Settings Icon" onclick="toggleElementVisibility('config-container')">
     </div>
 
-    <div id="config-container" class="grid-container-2 hidden">
+    <div id="config-container" class="hidden">
+        <hr style="width: 100%; margin: 1em 0">
         <div class="flex-column gap-half-em">
-            <label>Please enter the security key </label>
-            <input type="text" id="temp-key-input" required>
-
-            <label>Please Choose the source website </label>
-            <select id="site-source-select">
-                {{#each sitesSources}}
-                    <option value="{{this.code}}">{{this.libelle}}</option>
-                {{/each}}
-            </select>
-            
-            <label>Please correct the path template if necessary </label>
-            <input type="text" id="path-template-input" value="{{destination.urlParam}}">
-            <button onclick="saveConfigAndIdentity()" style="width: fit-content;">
-                Save
-            </button>
-        </div>
-        <div class="flex-column gap-half-em">
-            <label>Please enter the the serie number/url-name (arc-of-gunfire or 4635/start-with-planetary-governor ) </label>
-            <input type="text" id="serie-input" placeholder="Enter the key" value="{{destination.serieBaseUrl}}">
-
-            <label>Please enter chapter Number </label>
-            <input type="text" id="config-chapter-number-input" placeholder="Enter the key">
-
-        </div>
+            SOON
+<!--            <label>Please Choose the source website </label>-->
+<!--            <select id="site-source-select">-->
+<!--                {#each sitesSources}}-->
+<!--                    <option value="{this.code}}">{this.libelle}}</option>-->
+<!--                {/each}}-->
+<!--            </select>-->
+<!--            -->
+<!--            <label>Please correct the path template if necessary </label>-->
+<!--            <input type="text" id="path-template-input" value="{destination.urlParam}}">-->
+<!--&lt;!&ndash;            TODO make it work with new backend architecture later&ndash;&gt;-->
+<!--            <button style="width: fit-content;">-->
+<!--                Save-->
+<!--            </button>-->
+<!--        </div>-->
+<!--        <div class="flex-column gap-half-em">-->
+<!--            <label>Please enter the the serie number/url-name (arc-of-gunfire or 4635/start-with-planetary-governor ) </label>-->
+<!--            <input type="text" id="serie-input" placeholder="Enter the key" value="{destination.serieBaseUrl}}">-->
+<!--            <label>Please enter chapter Number </label>-->
+<!--            <input type="text" id="config-chapter-number-input" placeholder="Enter the key">-->
+<!--        </div>-->
     </div>
 </div>
 <hr style="width: 100%; margin: 1em 0">
-<div>
-    <input type="number" id="selected-chapter-input" placeholder="Enter chapter N°" required>
-    <button onclick="showSpecificChapter()">Go</button>
-</div>
-<hr style="width: 100%; margin: 1em 0">
-<div class="grid-container-3">
-{{#IsNotFirstChapter destination}}  
-    <button id="prev-chapter" onclick="showPreviousChapter()">Previous</button>
-{{/IsNotFirstChapter}}
-<button id="load-chapter" onclick="showCurrentChapter()">Load Chapter</button>
-<button id="next-chapter" onclick="showNextChapter()">Next</button>
-</div>
 <div id="chapter-container">
     <!-- This is where the loaded chapter will be inserted -->
-    <div id="chapter-content"></div>
+    <div id="chapter-content">
+    {{#if chapterViewResponse}}
+        <h2>{{chapterViewResponse.chapter.title}}</h2>
+        <p>{{{chapterViewResponse.chapter.body}}}</p>
+    {{/if}}
+    </div>
 </div>
-<div id="navigation-under-chapter" class="grid-container-2 hidden">
+
+<div id="navigation-under-chapter">
     <hr style="width: 100%; margin: 1em 0">
-    <div>
-        {{#IsNotFirstChapter destination}}
-        <button id="prev-chapter" onclick="showPreviousChapter()">Previous</button>
-        {{/IsNotFirstChapter}}
-        <button id="next-chapter" onclick="showNextChapter()">Next</button>
-    </div>
-    <div>
-        <input type="number" id="selected-chapter-input" placeholder="Enter chapter N°" required>
-        <button onclick="showSpecificChapter()">Go</button>
+    <div class="navbar" style="justify-content: center">
+        <div class="chapter-selection">
+            <button id="prev-chapter-bottom" onclick="showPreviousChapter()" class="{{#unless chapterViewResponse.navigation.isNotFirstChapter}}hidden{{/unless}}">&#x3c;</button>
+            <input type="text" id="selected-chapter-input-bottom" placeholder="Enter chapter N°" required value="{{chapterViewResponse.navigation.currentChapter}}">
+            <button onclick="showSpecificChapter('selected-chapter-input-bottom')">Go</button>
+            <button id="next-chapter-bottom" onclick="showNextChapter()">&#x3e;</button>
+        </div>
     </div>
 </div>
-
-
-<script>
-    // we set some variable front the back
-    let destination = {{{json  destination }}};
-</script>

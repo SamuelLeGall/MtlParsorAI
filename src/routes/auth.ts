@@ -1,28 +1,26 @@
 import { Authentification } from "../business/auth/Authentification";
 import { ResultFactory } from "../models/response";
-import { sourceWebsiteManager } from "../business/sourcesWebsites/sourceWebsiteManager";
-import {
-  destinationBase,
-  sourcesWebsites,
-} from "../business/sourcesWebsites/sourceWebsitesData";
 import { Router } from "express";
 
-const instanceSourceWebsite = new sourceWebsiteManager(
-  destinationBase,
-  sourcesWebsites,
-);
 const router = Router();
 router.get("/login", async function (req, res) {
-  // return the processed chapter
   const userID = req.cookies["userID"];
   const token = req.cookies["accessToken"];
+  const flashError = req.cookies["flashError"];
+
+  const pageProps = {
+    title: "MtlParsorAI",
+    errorMessage: undefined,
+  };
+  if (flashError) {
+    pageProps.errorMessage = flashError;
+    res.clearCookie("flashError");
+  }
 
   try {
     if (!userID || !token) {
       // no session, ask to connect
-      return res.render("login", {
-        title: "MtlParsorAI",
-      });
+      return res.render("login", pageProps);
     }
 
     const resultValidation = await new Authentification().verifyAccessToken(
@@ -34,17 +32,13 @@ router.get("/login", async function (req, res) {
       const [, errorValidation] = resultValidation;
       errorValidation.logToConsole();
       // invalid session, ask to connect again
-      return res.render("login", {
-        title: "MtlParsorAI",
-      });
+      return res.render("login", pageProps);
     }
 
     // user have an active session open
-    return res.redirect("/");
+    return res.redirect("/bookmark");
   } catch (e) {
-    return res.render("login", {
-      title: "MtlParsorAI",
-    });
+    return res.render("login", pageProps);
   }
 });
 
@@ -78,8 +72,6 @@ router.get("/create", async function (req, res) {
     // user have an active session open
     return res.render("index", {
       title: "MtlParsorAI",
-      destination: instanceSourceWebsite.getDestination("default"),
-      sitesSources: instanceSourceWebsite.getSourceWebsites(),
     });
   } catch (e) {
     return res.redirect("/login");

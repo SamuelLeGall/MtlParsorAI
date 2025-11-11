@@ -1,4 +1,3 @@
-// Config: tune these values to match your backend timing
 const REFRESH_INTERVAL_MS = 13 * 60 * 1000; // 13 minutes -> refresh before 14min cookie / 15min JWT
 const INACTIVITY_TIMEOUT_MS = 10 * 60 * 1000; // consider user inactive after 10 min of no interaction
 

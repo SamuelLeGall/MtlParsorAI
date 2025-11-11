@@ -11,6 +11,8 @@ import {
 import jwt, { SignOptions } from "jsonwebtoken";
 import { UserDB } from "../../models/users";
 import validator from "validator";
+import { BookmarksRepository } from "../users/BookmarksRepository";
+import { defaultBookmarks } from "../../data/defaultBookmarks";
 
 export class Authentification {
   private privateKey = ":fr6UoOO4b7nrlC07KAlh6y6Na-qawxsVMr8tRHHL";
@@ -436,11 +438,18 @@ export class Authentification {
 
       const passwordHash = await bcrypt.hash(normalizedPassword, 12);
 
-      await usersRepo.create(
+      const userID = await usersRepo.create(
         normalizedUsername,
         passwordHash,
         adminRoleEnabled,
       );
+
+      // we add the default bookmarks to the account
+      const bookmarksRepo = new BookmarksRepository();
+      for (const bookmark of defaultBookmarks) {
+        bookmark.userID = userID;
+        await bookmarksRepo.add(userID, bookmark);
+      }
 
       return [true, null];
     } catch (e) {

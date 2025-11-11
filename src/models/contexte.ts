@@ -1,5 +1,3 @@
-import { sourceWebsiteCode } from "./sourceWebsite";
-
 export interface sharedContext {
   lastChapterSummary: string | null;
   currentChapterSummary: string | null;
@@ -7,15 +5,6 @@ export interface sharedContext {
   currentChapterText: string | null;
 }
 
-export interface destination {
-  userId: string;
-  sourceSiteCode: sourceWebsiteCode;
-  urlParam: string;
-  params: {
-    code: string;
-    value: string | number;
-  }[];
-}
 export type computeChapterResponse = Promise<
   | {
       success: true;

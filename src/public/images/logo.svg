@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 325 80" role="img" aria-labelledby="logoTitle logoDesc">
+    <title id="logoTitle">MtlParsorAI logo</title>
+    <desc id="logoDesc">Stylized paper fold icon and the text MtlParsorAI</desc>
+
+    <defs>
+        <linearGradient id="g1" x1="0" x2="1" y1="0" y2="1">
+            <stop offset="0" stop-color="#2EA0FF"/>
+            <stop offset="1" stop-color="#0077D9"/>
+        </linearGradient>
+        <linearGradient id="g2" x1="0" x2="1" y1="0" y2="1">
+            <stop offset="0" stop-color="#0A61B8"/>
+            <stop offset="1" stop-color="#014F9A"/>
+        </linearGradient>
+    </defs>
+
+    <g transform="rotate(-25 25 40) translate(80,22) scale(-1,1)">
+        <path d="M 12,4 L 52,40 L 25,40 Z" fill="url(#g1)" />
+        <path d="M 12,4 L 12,72 L 25,40 Z" fill="url(#g2)" />
+        <path d="M 25,40 L 52,40 L 12,72 Z" fill="url(#g2)" opacity="0.8"/>
+    </g>
+
+    <!-- brand text -->
+    <g transform="translate(90,54)">
+        <text x="0" y="0" font-family="Inter, Arial, Helvetica, sans-serif" font-weight="700" font-size="36" fill="#fff" letter-spacing="0.6">
+            MtlParsor
+        </text>
+        <text x="170" y="0" font-family="Inter, Arial, Helvetica, sans-serif" font-weight="700" font-size="36" fill="#9be1ff" letter-spacing="0.6">
+            AI
+        </text>
+    </g>
+</svg>

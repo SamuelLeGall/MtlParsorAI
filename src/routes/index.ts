@@ -1,61 +1,78 @@
 import { Router } from "express";
-import { sourceWebsiteManager } from "../business/sourcesWebsites/sourceWebsiteManager";
-import {
-  destinationBase,
-  sourcesWebsites,
-} from "../business/sourcesWebsites/sourceWebsitesData";
-import { destination } from "../models/contexte";
-import { Authentification } from "../business/auth/Authentification";
-import { ResultFactory } from "../models/response";
-
+import validator from "validator";
+import { BookmarksRepository } from "../business/users/BookmarksRepository";
+import { ChaptersRepository } from "../business/chapters/ChaptersRepository";
+import { ChapterViewResponse } from "../models/chapter";
 const router = Router();
-const instanceSourceWebsite = new sourceWebsiteManager(
-  destinationBase,
-  sourcesWebsites,
-);
 
 /* GET home page. */
 router.get("/", async (req, res) => {
-  // return the processed chapter
-  const userID = req.cookies["userID"];
-  const token = req.cookies["accessToken"];
-
   try {
-    if (!userID || !token) {
-      // no session, ask to connect
-      return res.redirect("/login");
-    }
-
-    const resultValidation = await new Authentification().verifyAccessToken(
-      token,
-      userID,
-    );
-
-    if (ResultFactory.isError(resultValidation)) {
-      const [, errorValidation] = resultValidation;
-      errorValidation.logToConsole();
-      // invalid session, ask to connect again
+    if (!req.user?.userID) {
+      console.error(
+        "path: / - Rejected a router.get for missing userID despite verifyJWT",
+      );
       return res.redirect("/login");
     }
 
     // user have an active session open
-    return res.render("index", {
+    const pageProps: {
+      title: string;
+      chapterViewResponse?: ChapterViewResponse;
+    } = {
       title: "MtlParsorAI",
-      destination: instanceSourceWebsite.getDestination("default"),
-      sitesSources: instanceSourceWebsite.getSourceWebsites(),
-    });
+      chapterViewResponse: undefined,
+    };
+
+    if (req.query.bookmarkID) {
+      const normalizedBookmarkID = validator.escape(
+        String(req.query.bookmarkID),
+      );
+
+      const instanceBookmarksRepository = new BookmarksRepository();
+      const hydratedBookmark = await instanceBookmarksRepository.fetchByID(
+        req.user.userID,
+        normalizedBookmarkID,
+      );
+      if (!hydratedBookmark) {
+        return res.render("error", {
+          title: "Error",
+          errorAI: "Can't find current book",
+        });
+      }
+
+      const instanceChaptersRepository = new ChaptersRepository();
+      const chapter = await instanceChaptersRepository.getChapter(
+        hydratedBookmark,
+        hydratedBookmark.bookmark.currentChapter,
+        false,
+      );
+      if (!chapter) {
+        return res.render("error", {
+          title: "Error",
+          errorAI: "Unable to load chapter",
+        });
+      }
+
+      pageProps.chapterViewResponse = {
+        bookmarkID: hydratedBookmark.bookmark.id,
+        book: {
+          id: hydratedBookmark.book.id,
+          name: hydratedBookmark.book.name,
+          author: hydratedBookmark.book.author,
+        },
+        navigation: {
+          currentChapter: hydratedBookmark.bookmark.currentChapter,
+          isNotFirstChapter: hydratedBookmark.bookmark.currentChapter > 1,
+        },
+        chapter,
+      };
+    }
+
+    return res.render("index", pageProps);
   } catch (e) {
     return res.redirect("/login");
   }
-});
-
-router.post("/destination", (req, res) => {
-  const newDestination: destination =
-    req.body.newConfigDestination || destinationBase;
-  instanceSourceWebsite.updateDestination(newDestination);
-  // TODO
-  res.sendStatus(200);
-  return;
 });
 
 export default router;

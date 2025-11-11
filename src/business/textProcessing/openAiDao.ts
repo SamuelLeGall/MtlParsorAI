@@ -17,7 +17,14 @@ export class openAiDao {
       return "";
     }
 
-    // We make the API call
+    /*
+     * Note: Prices per 1M tokens. (up to date 11/2025)
+     *
+     * Model         | Input   | Output
+     * ------------- | ------- | -------
+     * gpt-4o-mini   | $0.15   | $0.60
+     * gpt-5-mini    | $0.25   | $2.00
+     */
     const completion: OpenAI.Chat.Completions.ChatCompletion =
       await openai.chat.completions.create({
         model: "gpt-4o-mini",

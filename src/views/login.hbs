@@ -1,8 +1,11 @@
-<h3>Welcome to {{title}}</h3>
-<hr style="width: 100%; margin: 1em 0">
+<div class="header">
+    <div class="img-container">
+        <img src="/images/logo.svg" alt="MtlParsorAI Logo">
+    </div>
+</div>
 
 <div class="flex-column gap-half-em" style="align-items: center;">
-    <h4>Connexion</h4>
+    <h3>Connexion</h3>
 
     <div class="grid-container-2" style="max-width: 400px;">
         <label for="username">Username</label>
@@ -10,10 +13,25 @@
 
         <label for="password">Password</label>
         <input type="password" id="password" placeholder="Enter your password" required>
+
+        <div aria-hidden="true">
+            <label for="email"
+                   style="position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden;"
+            >email</label>
+            <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    autocomplete="off"
+                    tabindex="-1"
+                    style="position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden;"
+            >
+        </div>
     </div>
 
     <button onclick="login()" style="margin-top: 1em;">Login</button>
     <p id="login-error" style="color: rgb(240, 128, 128); display: none;"></p>
+    <p id="login-error-backend" style="color: rgb(240, 128, 128);">{{errorMessage}}</p>
     <p style="margin-top: 1em;">
         Don’t have an account yet?
         <a href="/create">Create one</a>
@@ -24,10 +42,17 @@
     async function login() {
         const username = document.getElementById("username").value.trim();
         const password = document.getElementById("password").value;
+        const email = document.getElementById("email").value.trim();
+
 
         const errorEl = document.getElementById("login-error");
         errorEl.style.display = "none";
         errorEl.textContent = "";
+
+        if (email !== "") {
+            console.warn("Bot detected");
+            return; // silently abort
+        }
 
         if (!username || !password) {
             errorEl.textContent = "Please fill in both fields.";
@@ -53,7 +78,7 @@
             }
 
             // Cookies are automatically set by the backend now
-            window.location.href = "/";
+            window.location.href = "/bookmark";
             window.authRefresh.start();
         } catch (err) {
             console.error(err);

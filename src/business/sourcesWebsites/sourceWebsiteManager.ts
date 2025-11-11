@@ -1,41 +1,22 @@
 import axios from "axios";
 import { load } from "cheerio";
-import { sourceWebsitesSelect, wtrLabModel } from "../../models/sourceWebsite";
-import { destination } from "../../models/contexte";
+import { ReaderDataConfig } from "../../models/readerConfig";
 
 export class sourceWebsiteManager {
-  private destinations: destination[];
-  private configSourceWebsite: sourceWebsitesSelect[];
+  private readonly readerConfig: ReaderDataConfig;
 
-  constructor(
-    destination: destination,
-    configSourceWebsite: sourceWebsitesSelect[],
-  ) {
-    this.destinations = [destination];
-    this.configSourceWebsite = configSourceWebsite;
+  constructor(readerConfig: ReaderDataConfig) {
+    this.readerConfig = readerConfig;
   }
 
-  getSourceWebsites(): sourceWebsitesSelect[] {
-    return this.configSourceWebsite;
-  }
-
-  getDestination(userId: string): destination | undefined {
-    return this.destinations.find(
-      (destination) => destination.userId === userId,
-    );
-  }
-
-  updateDestination(destination: destination): void {
-    const index = this.destinations.findIndex(
-      (destination) => destination.userId === destination.userId,
-    );
-    this.destinations[index] = destination;
-  }
-
-  private async fetchUrlHTML(url: string) {
+  private async fetchUrlHTML(
+    url: string,
+  ): Promise<
+    { success: true; data: any } | { success: false; message: string }
+  > {
     try {
       const response = await axios.get(url);
-      return { sucess: true, data: response.data };
+      return { success: true, data: response.data };
     } catch (error: any) {
       console.error(error);
       return {
@@ -45,22 +26,27 @@ export class sourceWebsiteManager {
     }
   }
 
-  private buildUrl(destination: destination): string {
-    let url = destination.urlParam;
-    destination.params.forEach((param) => {
-      if (param.code && destination.urlParam.includes(`<${param.code}>`)) {
-        url = url.replace(`<${param.code}>`, param.value.toString());
+  private buildUrl(): string {
+    let url = this.readerConfig.template;
+    for (const [codeTemplate, value] of Object.entries(
+      this.readerConfig.values,
+    )) {
+      if (codeTemplate && url.includes(`<${codeTemplate}>`)) {
+        url = url.replace(`<${codeTemplate}>`, value.toString());
       }
-    });
+    }
     return url;
   }
 
-  async fetchChapterText(destination: destination) {
+  public async fetchChapterText() {
     let url = "";
     try {
-      url = this.buildUrl(destination);
+      url = this.buildUrl();
       console.log(`url is ${url}`);
       const response = await this.fetchUrlHTML(url);
+      if (!response.success) {
+        return { sucess: false, url };
+      }
 
       // Load the HTML into cheerio
       const $ = load(response.data);
@@ -71,36 +57,22 @@ export class sourceWebsiteManager {
         title: null,
         body: null,
       };
-      let scriptContent: wtrLabModel | null = null;
 
       // mapping to get title and libelle depending on the source website
-      switch (destination.sourceSiteCode) {
+      switch (this.readerConfig.sourceSiteCode) {
         case "FAN_MTL":
+        default:
           console.log("source is fanmtl.com");
           chapterData.title =
             $(".chapter-header .content-wrap .titles h2").text() || "";
 
           chapterData.body = $(".chapter-content").html() || "";
           break;
-        case "WTR_LAB":
-        default:
-          console.log("source is wtr-lab");
-          if (typeof $("#__NEXT_DATA__").html() === "string") {
-            scriptContent = JSON.parse($("#__NEXT_DATA__").html() as string);
-          }
-          chapterData.title =
-            scriptContent?.props?.pageProps?.serie?.chapter_data?.data?.title ||
-            null;
-          chapterData.body =
-            scriptContent?.props?.pageProps?.serie?.chapter_data?.data?.body.join(
-              " ",
-            ) || null;
-          break;
       }
 
       return { sucess: true, data: chapterData, url };
     } catch (error: any) {
-      console.error(error);
+      console.error(`fetchChapterText - error ${error}`);
       return {
         success: false,
         message: error.message || JSON.stringify(error),
