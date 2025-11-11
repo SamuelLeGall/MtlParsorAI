@@ -252,6 +252,28 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  function onMounted() {
+    const btn = document.getElementById("backToTop");
+
+    if (btn) {
+      // Show button when scrolling down
+      window.onscroll = function () {
+        btn.style.display =
+          document.body.scrollTop > 100 ||
+          document.documentElement.scrollTop > 100
+            ? "flex"
+            : "none";
+      };
+
+      // Scroll smoothly to top when clicked
+      btn.addEventListener("click", () => {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+    }
+  }
+
+  onMounted();
+
   window.toggleElementVisibility = toggleElementVisibility;
   window.loadChapter = loadChapter;
   window.loadPreviousChapter = loadPreviousChapter;
