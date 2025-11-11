@@ -4,7 +4,7 @@ import { openAiMessage } from "../../models/openAi";
 export class openAiDao {
   async makeAPICall(messages: openAiMessage[]) {
     const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY!,
+      apiKey: process.env.OPENAI_API_KEY!.trim(),
     });
 
     // if we want to not make the api call (for dev)

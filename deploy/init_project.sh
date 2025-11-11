@@ -20,6 +20,11 @@ else
     echo "⚡ Launching local development environment..."
 fi
 
+# ⚡ Load .env if it exists (from project root)
+if [ -f "../.env" ]; then
+    echo "Loading environment variables from ../.env"
+    export $(grep -v '^#' ../.env | xargs)
+fi
 
 # Stop & remove existing container if it exists
 EXISTING_CONTAINER=$(docker ps -aq -f name=$CONTAINER_NAME)
@@ -29,7 +34,11 @@ if [ $EXISTING_CONTAINER ]; then
 fi
 
 # Build and start the container
-docker compose -f "$COMPOSE_FILE" up --build -d
+if [ -f "../.env" ]; then
+  docker compose --env-file ../.env -f "$COMPOSE_FILE" up --build -d
+else
+  docker compose -f "$COMPOSE_FILE" up --build -d
+fi
 
 # Show final message
 if [ "$ENVIRONMENT" = "prod" ]; then
