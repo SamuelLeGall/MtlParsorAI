@@ -12,8 +12,5 @@ npm install
 # Run the build
 npm run build
 
-# Move the secret file to the final destination
-mv /tmp/openaiSecret.json /var/www/mtlParsorAI/build/dist/openaiSecret.json
-
 # Restart PM2 process
 pm2 restart MtlParsorAI

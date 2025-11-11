@@ -1,0 +1,93 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - '**' # all branches
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  install_deps:
+    name: Install Dependencies # we check the Dependencies can be installed correctly
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+  quality_tools:
+    name: Run Lint & Type Checks # we know Dependencies are functionnal, we now check the lint/test
+    runs-on: ubuntu-latest
+    needs: install_deps
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install dependencies
+        run: npm ci
+      - name: Run lint
+        run: npm run lint
+
+  build:
+    name: Build Project # we know the lint/test are ok, we check if the build works
+    runs-on: ubuntu-latest
+    needs: quality_tools
+    if: github.ref == 'refs/heads/main' # only on main
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install dependencies
+        run: npm ci
+      - name: Run build
+        run: npm run build
+      - name: Archive build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  deploy:
+    # we ensured the code is valid, linted, and builds properly before merging
+    # time to deliver the actual app to production
+    name: Deploy to VPS (Docker Compose)
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Copy project to VPS
+      - name: Upload project to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: "."
+          target: "/home/${{ secrets.VPS_USER }}/mtlparsorai"
+
+      # Execute init_project.sh remotely
+      - name: Run deploy script on VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd ~/mtlparsorai/deploy
+            chmod +x ./init_project.sh
+            ./init_project.sh prod

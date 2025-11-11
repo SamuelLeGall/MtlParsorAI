@@ -15,7 +15,7 @@ import { BookmarksRepository } from "../users/BookmarksRepository";
 import { defaultBookmarks } from "../../data/defaultBookmarks";
 
 export class Authentification {
-  private privateKey = ":fr6UoOO4b7nrlC07KAlh6y6Na-qawxsVMr8tRHHL";
+  private privateKey = process.env.JWT_PRIVATE_KEY!;
 
   private generateJWT = (
     userID: string,
