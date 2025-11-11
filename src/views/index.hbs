@@ -2,7 +2,7 @@
     <div class="img-container">
         <img src="/images/logo.svg" alt="MtlParsorAI Logo">
     </div>
-    <h2>Your Bookmarks</h2>
+    <h2>Reading {{ chapterViewResponse.book.name }}</h2>
     <form action="/auth/logout" method="POST">
         <button type="submit">Logout</button>
     </form>
@@ -13,7 +13,7 @@
         <div class="chapter-selection">
             <button id="prev-chapter-top" onclick="showPreviousChapter()" class="{{#unless chapterViewResponse.navigation.isNotFirstChapter}}hidden{{/unless}}">&#x3c;</button>
             <input type="text" id="selected-chapter-input-top" placeholder="Enter chapter N°" required value="{{chapterViewResponse.navigation.currentChapter}}">
-            <button onclick="showSpecificChapter()">Go</button>
+            <button onclick="showSpecificChapter('selected-chapter-input-top')">Go</button>
             <button id="next-chapter-top" onclick="showNextChapter()">&#x3e;</button>
         </div>
         <img width="20px" height="20px" src="/images/settings.svg" alt="Settings Icon" onclick="toggleElementVisibility('config-container')">
@@ -62,7 +62,7 @@
         <div class="chapter-selection">
             <button id="prev-chapter-bottom" onclick="showPreviousChapter()" class="{{#if chapterViewResponse.navigation.isNotFirstChapter}}hidden{{/if}}">&#x3c;</button>
             <input type="text" id="selected-chapter-input-bottom" placeholder="Enter chapter N°" required value="{{chapterViewResponse.navigation.currentChapter}}">
-            <button onclick="showSpecificChapter()">Go</button>
+            <button onclick="showSpecificChapter('selected-chapter-input-bottom')">Go</button>
             <button id="next-chapter-bottom" onclick="showNextChapter()">&#x3e;</button>
         </div>
     </div>
