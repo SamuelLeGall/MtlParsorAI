@@ -3,6 +3,7 @@ import { sourceWebsiteManager } from "../sourcesWebsites/sourceWebsiteManager";
 import { chunckParsor } from "./chunckParsor";
 import { requestManager } from "./requestManager";
 import { sharedContextManager } from "./sharedContextManager";
+import { HydratedBookmark } from "../../models/bookmark";
 
 export class generativeTextOrchestrator {
   /*
@@ -48,16 +49,16 @@ export class generativeTextOrchestrator {
   }
 
   async computeChapter(
-    destination: destination,
+    hydratedBookmark: HydratedBookmark,
+    chapterNumber: number,
     allowBiggerLimit?: boolean,
   ): computeChapterResponse {
     // first we fetch the actual mth text from a specified website
-    const sourceObject =
-      await this.instanceSourceWebsite.fetchChapterText(destination);
+    const sourceObject = await this.instanceSourceWebsite.fetchChapterText();
     if (!sourceObject?.data?.body) {
       return {
         success: false,
-        message: `Error While fetching the chapter - Does the chapter exist ? - ${destination}`,
+        message: `Error While fetching the chapter - Does the chapter exist ? - Serie: ${hydratedBookmark.book.name} - chapter number: ${chapterNumber}`,
       };
     }
 
@@ -124,29 +125,29 @@ export class generativeTextOrchestrator {
       }
     }
 
-    try {
-      // recap the current chapter to be used as context in the next chapter
-      const currentChapterSummary =
-        await this.instanceRequestManager.summarizeCurrentChapter(
-          this.instanceSharedContext,
-        );
-      this.instanceSharedContext.setCurrentChapterSummary(
-        currentChapterSummary,
-      );
-    } catch (e: any) {
-      console.error("processChunk en erreur - ", e.message);
-      return {
-        success: false,
-        message: "Error summarizing chapter.",
-      };
-    }
+    // try {
+    //   // recap the current chapter to be used as context in the next chapter
+    //   const currentChapterSummary =
+    //     await this.instanceRequestManager.summarizeCurrentChapter(
+    //       this.instanceSharedContext,
+    //     );
+    //   this.instanceSharedContext.setCurrentChapterSummary(
+    //     currentChapterSummary,
+    //   );
+    // } catch (e: any) {
+    //   console.error("processChunk en erreur - ", e.message);
+    //   return {
+    //     success: false,
+    //     message: "Error summarizing chapter.",
+    //   };
+    // }
 
     // update the global context and integrate the currentChapterSummary
-    const globalContextUpdated =
-      await this.instanceRequestManager.manageGlobalContext(
-        this.instanceSharedContext,
-      );
-    this.instanceSharedContext.updateGlobalContext(globalContextUpdated);
+    // const globalContextUpdated =
+    //   await this.instanceRequestManager.manageGlobalContext(
+    //     this.instanceSharedContext,
+    //   );
+    // this.instanceSharedContext.updateGlobalContext(globalContextUpdated);
 
     console.log("done");
     // return the processed chapter

@@ -43,7 +43,7 @@ router.get("/", async (req, res) => {
 
       const instanceChaptersRepository = new ChaptersRepository();
       const chapter = await instanceChaptersRepository.getChapter(
-        hydratedBookmark.book.id,
+        hydratedBookmark,
         hydratedBookmark.bookmark.currentChapter,
         false,
       );

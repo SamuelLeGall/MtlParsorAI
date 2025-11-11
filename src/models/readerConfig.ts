@@ -1,4 +1,4 @@
-import { sourceWebsiteCode } from "./sourceWebsite";
+export type sourceWebsiteCode = "FAN_MTL";
 
 export interface sourceWebsitesSelect {
   code: sourceWebsiteCode;

@@ -20,11 +20,11 @@ export const defaultBooks: BookDB[] = [
       "Who is the empire?",
     readerDataConfigs: [
       {
-        sourceSiteCode: "WTR_LAB", // if updated, impact defaultBookmarks.ts
+        sourceSiteCode: "FAN_MTL", // if updated, impact defaultBookmarks.ts
         template:
-          "https://wtr-lab.com/en/serie-<SERIE_FRAGMENT>/chapter-<CHAPTER_NUMBER>",
+          "https://www.fanmtl.com/novel/<SERIE_FRAGMENT>_<CHAPTER_NUMBER>.html",
         values: {
-          SERIE_FRAGMENT: "4635/start-with-planetary-governor",
+          SERIE_FRAGMENT: "6949856",
           CHAPTER_NUMBER: "1",
         },
       },

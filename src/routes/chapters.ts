@@ -53,7 +53,7 @@ router.post("/chapter/load", async function (req, res) {
 
     const instanceChaptersRepository = new ChaptersRepository();
     const chapter = await instanceChaptersRepository.getChapter(
-      hydratedBookmark.book.id,
+      hydratedBookmark,
       chapterNumber,
       allowBiggerLimit,
     );
@@ -141,7 +141,7 @@ router.post("/chapter/initView", async function (req, res) {
 
     const instanceChaptersRepository = new ChaptersRepository();
     const chapter = await instanceChaptersRepository.getChapter(
-      hydratedBookmark.book.id,
+      hydratedBookmark,
       chapterNumber,
       false,
     );
