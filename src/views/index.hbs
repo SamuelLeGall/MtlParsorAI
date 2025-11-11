@@ -60,7 +60,7 @@
     <hr style="width: 100%; margin: 1em 0">
     <div class="navbar" style="justify-content: center">
         <div class="chapter-selection">
-            <button id="prev-chapter-bottom" onclick="showPreviousChapter()" class="{{#if chapterViewResponse.navigation.isNotFirstChapter}}hidden{{/if}}">&#x3c;</button>
+            <button id="prev-chapter-bottom" onclick="showPreviousChapter()" class="{{#unless chapterViewResponse.navigation.isNotFirstChapter}}hidden{{/unless}}">&#x3c;</button>
             <input type="text" id="selected-chapter-input-bottom" placeholder="Enter chapter N°" required value="{{chapterViewResponse.navigation.currentChapter}}">
             <button onclick="showSpecificChapter('selected-chapter-input-bottom')">Go</button>
             <button id="next-chapter-bottom" onclick="showNextChapter()">&#x3e;</button>
