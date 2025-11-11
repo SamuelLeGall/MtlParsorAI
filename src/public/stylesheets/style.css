@@ -265,3 +265,8 @@ input,select{
   padding: 2px 12px;
   display: flex;
 }
+
+#chapter-content p {
+  margin: 1em 0;
+  line-height: 2em;
+}
