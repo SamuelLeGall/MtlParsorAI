@@ -1,6 +1,6 @@
 # Connect and update
 
-1. ````ssh root@your_vps_ip````
+1. ````ssh <default_user>@<your_vps_ip>````
 2. ````apt update && apt upgrade -y````
 
 
@@ -15,7 +15,7 @@ You now have access to your VPS using ssh. You need to install docker and docker
 The default user used is a user with sudo privileges but not root itself, we will give ourself the missing right on docker
 
 ````
-sudo usermod -aG docker ubuntu
+sudo usermod -aG docker <default_user>
 ````
 
 Then we log out and back in for the new group membership to apply. If done right, you can now
@@ -176,3 +176,4 @@ Certbot sets up auto-renewal via a cron job. You can check with:
 sudo systemctl status certbot.timer
 
 ````
+
