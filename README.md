@@ -1,4 +1,4 @@
-﻿# MtlParsorAI
+# MtlParsorAI
 
 accessible from https://mtl-parsor-ai.samuel-legall.fr/login
 

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 325 80" role="img" aria-labelledby="logoTitle logoDesc">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 80" role="img" aria-labelledby="logoTitle logoDesc">
     <title id="logoTitle">MtlParsorAI logo</title>
     <desc id="logoDesc">Stylized paper fold icon and the text MtlParsorAI</desc>
 
@@ -14,14 +14,14 @@
         </linearGradient>
     </defs>
 
-    <g transform="rotate(-25 25 40) translate(80,22) scale(-1,1)">
+    <g transform="translate(47,-15) rotate(-25 25 40) scale(-1,1)">
         <path d="M 12,4 L 52,40 L 25,40 Z" fill="url(#g1)" />
         <path d="M 12,4 L 12,72 L 25,40 Z" fill="url(#g2)" />
         <path d="M 25,40 L 52,40 L 12,72 Z" fill="url(#g2)" opacity="0.8"/>
     </g>
 
     <!-- brand text -->
-    <g transform="translate(90,54)">
+    <g transform="translate(53,54)">
         <text x="0" y="0" font-family="Inter, Arial, Helvetica, sans-serif" font-weight="700" font-size="36" fill="#fff" letter-spacing="0.6">
             MtlParsor
         </text>

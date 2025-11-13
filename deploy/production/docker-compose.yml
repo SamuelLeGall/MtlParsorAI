@@ -6,23 +6,22 @@ services:
       target: prod
     container_name: "mtlparsorai-prod" # if change -> update init_project.sh
     ports:
-      - "3000:3000"
-      - "35729:35729" #livereload websocket
+      - "127.0.0.1:3000:3000"
     environment:
       - NODE_ENV=production
       - CHOKIDAR_USEPOLLING=true
-      - REDIS_URL=redis://redis:6379
+      - REDIS_URL=redis://default:${REDIS_PASSWORD}@redis:6379
       - JWT_PRIVATE_KEY=${JWT_PRIVATE_KEY}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - ADMIN_CREATION_SECRET=${ADMIN_CREATION_SECRET}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
     depends_on:
       - redis
   redis:
     image: redis:7-alpine
     container_name: redis
     restart: unless-stopped
-    ports:
-      - "6379:6379"
+    command: redis-server --requirepass $REDIS_PASSWORD
     volumes:
       - redis_data:/data
 

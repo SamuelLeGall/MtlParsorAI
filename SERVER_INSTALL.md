@@ -174,6 +174,52 @@ Certbot sets up auto-renewal via a cron job. You can check with:
 
 ````
 sudo systemctl status certbot.timer
+````
 
+## Security and Maintenance Notes
+- SSH access disabled for password authentication.
+- RootLogin disabled
+- whiteList login to only specific known users
+- Redis not exposed outside docker
+- Only `deploy` user has SSH key access.
+- Secrets are handled via GitHub Actions secrets.
+- JWT, API keys, and environment variables are not committed to GitHub.
+- HTTPS enforced via Let's Encrypt auto-renewal.
+
+### Securing ports + making sure redis not accessible outside the VPS :
+
+It may not work because its inside a docker, but it is still a good practise, make sure the docker-compose dont expose 0.0.0.0
+````
+sudo ufw allow 22,80,443/tcp
+sudo ufw deny 6379/tcp
+sudo ufw enable
+````
+
+### Securing VPS access
+PermitRootLogin no
+PasswordAuthentication no
+PubkeyAuthentication yes
+AllowUsers <your_user>
+
+
+### Brute force ssh attacks
+
+Use fail2ban
+
+````
+sudo apt install fail2ban -y
+
+echo "[sshd]
+enabled = true
+port = ssh
+filter = sshd
+logpath = /var/log/auth.log
+maxretry = 5
+bantime = 600
+findtime = 600
+" | sudo tee /etc/fail2ban/jail.local
+
+sudo systemctl restart fail2ban
+sudo fail2ban-client status
 ````
 

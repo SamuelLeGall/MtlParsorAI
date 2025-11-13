@@ -5,7 +5,10 @@ export async function seedRedis(redisClient: RedisClient) {
   const booksStore = redisClient.getBooksStore();
 
   for (const book of defaultBooks) {
-    await booksStore.saveBook(book);
+    const bookAlreadyInDB = await booksStore.exists(book.id);
+    if (!bookAlreadyInDB) {
+      await booksStore.saveBook(book);
+    }
   }
 
   console.log("✅ Redis seeded successfully.");
