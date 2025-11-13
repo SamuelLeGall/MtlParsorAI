@@ -1,8 +1,6 @@
 # Connect and update
 
-Follow the guide https://help.ovhcloud.com/csm/fr-dedicated-servers-ssh-introduction?id=kb_article_view&sysparm_article=KB0044339
-
-1. ````ssh root@your_vps_ip````
+1. ````ssh <default_user>@<your_vps_ip>````
 2. ````apt update && apt upgrade -y````
 
 
@@ -17,7 +15,7 @@ You now have access to your VPS using ssh. You need to install docker and docker
 The default user used is a user with sudo privileges but not root itself, we will give ourself the missing right on docker
 
 ````
-sudo usermod -aG docker ubuntu
+sudo usermod -aG docker <default_user>
 ````
 
 Then we log out and back in for the new group membership to apply. If done right, you can now
@@ -73,19 +71,19 @@ docker ps
 
 You can just launch the github CI/CD with the correct secrets and check with docker ps in the vps.
 
-you can access the app on https://57.129.80.152:3000/
+you can access the app on http://<VPS_PUBLIC_IP>:<PORT>/
 
 ## Stop using the ip
 
 ### Configure DNS for Subdomain
 
-Log in to your domain registrar (where samuel-legall.fr is managed).
+Log in to your domain registrar
 
 Add an A record:
 
 | Type | Name          | Content        | TTL   |
 | ---- | ------------- |----------------| ----- |
-| A    | mtl-parsor-ai | YOUR_PUBLIC_IP | 14400 |
+| A    | YOUR_SUB_DOMAIN | YOUR_PUBLIC_IP | 14400 |
 
 
 
@@ -93,7 +91,7 @@ TTL → keep 14400 (4 hours) or default
 Wait for DNS propagation. Then test with
 
 ````
-ping mtl-parsor-ai.samuel-legall.fr
+ping YOUR_SUB_DOMAIN.YOUR_MAIN_DOMAIN
 ````
 
 ## Stop specifying the port
@@ -115,7 +113,7 @@ sudo nano /etc/nginx/sites-available/default
 ````
 server {
     listen 80;
-    server_name mtl-parsor-ai.samuel-legall.fr;
+    server_name YOUR_SUB_DOMAIN.YOUR_MAIN_DOMAIN;
     
     server_tokens off;  # hides Nginx version
 
@@ -126,7 +124,7 @@ server {
     proxy_send_timeout 300;
 
           location / {
-              proxy_pass http://localhost:3000;
+              proxy_pass http://localhost:<PORT>;
               proxy_http_version 1.1;
               proxy_set_header Upgrade $http_upgrade;
               proxy_set_header Connection 'upgrade';
@@ -146,7 +144,7 @@ sudo systemctl reload nginx
 Now the app should be accessible via:
 
 ````
-http://mtl-parsor-ai.samuel-legall.fr/
+http://YOUR_SUB_DOMAIN.YOUR_MAIN_DOMAIN/
 ````
 
 ## Enable HTTPS with Let’s Encrypt
@@ -161,15 +159,14 @@ sudo apt install certbot python3-certbot-nginx -y
 Request a certificate for your subdomain:
 
 ````
-sudo certbot --nginx -d mtl-parsor-ai.samuel-legall.fr
+sudo certbot --nginx -d YOUR_SUB_DOMAIN.YOUR_MAIN_DOMAIN
 ````
 
 Certbot will automatically update your Nginx config for SSL.
 
 Test HTTPS access:
 
-````
-https://mtl-parsor-ai.samuel-legall.fr/
+https://YOUR_SUB_DOMAIN.YOUR_MAIN_DOMAIN/
 ````
 
 You should see the green lock in the browser.
