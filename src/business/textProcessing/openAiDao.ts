@@ -1,8 +1,11 @@
 import OpenAI from "openai";
 import { openAiMessage } from "../../models/openAi";
+import { zodTextFormat } from "openai/helpers/zod";
+import { ParsedResponse } from "openai/resources/responses/responses";
+import { CharacterGlossaryDB, GlossaryResponseZod } from "../../models/chapter";
 
 export class openAiDao {
-  async makeAPICall(messages: openAiMessage[]) {
+  async makeAPICall(instructions: string, messages: openAiMessage[]) {
     const openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY!.trim(),
     });
@@ -21,16 +24,46 @@ export class openAiDao {
      * gpt-4o-mini   | $0.15   | $0.60
      * gpt-5-mini    | $0.25   | $2.00
      */
-    const completion: OpenAI.Chat.Completions.ChatCompletion =
-      await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages,
-      });
+    const response: OpenAI.Responses.Response = await openai.responses.create({
+      model: "gpt-4o-mini",
+      instructions,
+      input: messages,
+    });
 
-    if (!completion?.choices?.[0]?.message?.content) {
+    if (!response?.output_text) {
       throw new Error("Réponse KO");
     }
 
-    return completion.choices[0].message.content;
+    return response.output_text;
+  }
+
+  async makeJSONAPICall(
+    instructions: string,
+    messages: openAiMessage[],
+  ): Promise<{ glossary: CharacterGlossaryDB[] }> {
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY!.trim(),
+    });
+
+    // if we want to not make the api call (for dev)
+    const allowAPICall = true;
+    if (!allowAPICall) {
+      return { glossary: [] };
+    }
+
+    const response: ParsedResponse<any> = await openai.responses.parse({
+      model: "gpt-4o-mini",
+      instructions,
+      input: messages,
+      text: {
+        format: zodTextFormat(GlossaryResponseZod, "glossary"),
+      },
+    });
+
+    if (!response?.output_parsed) {
+      throw new Error("Réponse KO");
+    }
+
+    return response.output_parsed;
   }
 }

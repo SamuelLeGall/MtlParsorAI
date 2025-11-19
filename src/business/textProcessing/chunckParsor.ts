@@ -52,8 +52,8 @@ export class chunckParsor {
         chunks.push(currentChunk.join(" "));
 
         //we keep the overlapSize last sentences
-        // currentChunk = currentChunk.slice(-this.overlapSize);
-        // currentChunk.push("<END_PREV_CHUNCK_OVERLAP>");
+        currentChunk = currentChunk.slice(-this.overlapSize);
+        currentChunk.push("<END_PREV_CHUNCK_OVERLAP>");
         currentChunk = [];
       }
     }

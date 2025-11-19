@@ -4,48 +4,76 @@ import { chunckParsor } from "./chunckParsor";
 import { requestManager } from "./requestManager";
 import { sharedContextManager } from "./sharedContextManager";
 import { HydratedBookmark } from "../../models/bookmark";
+import { ChaptersRepository } from "../chapters/ChaptersRepository";
+import { CharacterGlossaryDB } from "../../models/chapter";
 
 export class generativeTextOrchestrator {
-  /*
-    maxChunkSize (1200 tokens) is based on :
-      - Average Word Length: English words typically average about 4 tokens per word (including spaces and punctuation).
-        Expected Chapter Size: An average chapter might contain around 10,000 words, which translates to roughly 40,000 tokens. 
-      - Given the model's context limit of 128,000 tokens, it’s crucial to break down the input to fit the manageable size.
-      - Buffer for Responses: The model can output a maximum of 16,384 tokens. To ensure there's enough space for the model's response, 
-        the input is kept well below the maximum context limit to avoid cutting off responses or running out of context.
+  private tokenToCharacters(token: number): number {
+    return 4 * token;
+  }
+  /**
+   * Chunking and token budgeting for chapter translation
+   * ----------------------------------------------------
+   * Goal: Split chapters into chunks for translation while keeping context coherent.
+   * Each chunk will include:
+   *   - Previous translated chunk (will be in an assistant context)
+   *   - Last chapter summary
+   *   - Global summary
+   *   - Character glossary
+   *   - Current chunk text
+   *
+   * Models:
+   *   gpt-4o-mini:
+   *     - Context limit: 128,000 tokens
+   *     - Max output: 16,384 tokens
+   *   gpt-5-mini:
+   *     - Context limit: 400,000 tokens
+   *     - Max output: 128,000 tokens
+   *
+   * Guidelines for chunk sizing:
+   *   1. Input + expected output must stay within model context.
+   *   2. Include a buffer for safety (~10-15% of context limit).
+   *   3. Overlap between chunks ensures continuity in translations.
+   *   4. Average English word: ~1.3 tokens. (1 token ≈ 4 characters)
+   *
+   * Example calculation for gpt-4o-mini:
+   *   Max context: 128,000 tokens
+   *   Max output: 16,384 tokens
+   *   Reserved for context (previous translation + chapter & global summaries + glossary):
+   *     - Previous chunk: ~16,000 tokens
+   *     - Last chapter summary: ~800 tokens
+   *     - Global summary: ~2,500 tokens
+   *     - Glossary: ~1,000 tokens
+   *   Remaining budget for current chunk text: 128,000 - (16,000 + 800 + 2,500 + 1,000) = ~107,700 tokens
+   *   But ~107,700 tokens >  Max output so we use (max output - buffer)
+   *   → This is extremely generous, so typical chunks can be several thousand tokens each.
+   */
 
-    overlapSize = The purpose of the overlap is to ensure that context is preserved across chunks. 
-    This way, when you process the second chunk, it can reference the end of the first chunk, minimizing potential 
-    information loss and helping the model maintain a coherent understanding of the narrative.
-
-    We currently stop the process for chapter bigger that 22000 characters (around 225/250 sentences). We can with a param in the body allow to go way higher (600 to 700 sentences).
-  */
-  private maxChunkSize = 1200 * 4; // Maximum size for each chunk (*4 because we work with characters not token)
+  private maxChunkSize = this.tokenToCharacters(15_000);
   private overlapSize = 4; // Number of overlapping sentences
-  private currentChapterSummaryMaxSize = 500; // Number of tokens for chapter summary
-  private globalContextSummaryMaxSize = 1500; // Number of tokens for summary of the whole story
+  private currentChapterSummaryMaxSize = 800; // Number of tokens for chapter summary
+  private globalContextSummaryMaxSize = 2500; // Number of tokens for summary of the whole story
   private maxSentenceLength = 250; // 250 characters max per sentence
   private instanceRequestManager: requestManager;
-  private instanceSharedContext: sharedContextManager;
+  private instanceChaptersRepo: ChaptersRepository;
   private instanceSourceWebsite: sourceWebsiteManager;
   private instanceParsor: chunckParsor;
 
-  constructor(instanceSourceWebsite: sourceWebsiteManager) {
+  constructor(
+    instanceSourceWebsite: sourceWebsiteManager,
+    instanceChaptersRepo = new ChaptersRepository(),
+  ) {
     this.instanceSourceWebsite = instanceSourceWebsite;
     this.instanceRequestManager = new requestManager(
       this.currentChapterSummaryMaxSize,
       this.globalContextSummaryMaxSize,
     );
-    this.instanceSharedContext = new sharedContextManager();
     this.instanceParsor = new chunckParsor(
       this.maxChunkSize,
       this.overlapSize,
       this.maxSentenceLength,
     );
-  }
-
-  getSharedContext(): sharedContextManager {
-    return this.instanceSharedContext;
+    this.instanceChaptersRepo = instanceChaptersRepo;
   }
 
   async computeChapter(
@@ -75,9 +103,6 @@ export class generativeTextOrchestrator {
       };
     }
 
-    // we update the summaries
-    this.instanceSharedContext.updateSummaries();
-
     // Split the text into chunks
     const chunks = this.instanceParsor.splitTextIntoChunks(
       sourceObject.data.body,
@@ -106,16 +131,21 @@ export class generativeTextOrchestrator {
     }
 
     console.log("processing " + chunks.length + " chuncks");
+    const instanceSharedContext = new sharedContextManager(
+      chapterNumber,
+      hydratedBookmark.book.id,
+      this.instanceChaptersRepo,
+    );
 
     // Process each chunk
     for (const chunk of chunks) {
       try {
         const content = await this.instanceRequestManager.processChunk(
           chunk,
-          this.instanceSharedContext,
+          instanceSharedContext,
         );
 
-        this.instanceSharedContext.addToCurrentChapterText(content);
+        instanceSharedContext.addToCurrentChapterText(content);
       } catch (e: any) {
         console.error("processChunk en erreur - ", e.message);
         return {
@@ -125,29 +155,61 @@ export class generativeTextOrchestrator {
       }
     }
 
-    // try {
-    //   // recap the current chapter to be used as context in the next chapter
-    //   const currentChapterSummary =
-    //     await this.instanceRequestManager.summarizeCurrentChapter(
-    //       this.instanceSharedContext,
-    //     );
-    //   this.instanceSharedContext.setCurrentChapterSummary(
-    //     currentChapterSummary,
-    //   );
-    // } catch (e: any) {
-    //   console.error("processChunk en erreur - ", e.message);
-    //   return {
-    //     success: false,
-    //     message: "Error summarizing chapter.",
-    //   };
-    // }
+    let currentChapterSummary;
+    try {
+      // recap the current chapter to be used as context in the next chapter
+      currentChapterSummary =
+        await this.instanceRequestManager.summarizeCurrentChapter(
+          instanceSharedContext,
+        );
+    } catch (e: any) {
+      console.error("processChunk en erreur - ", e.message);
+      return {
+        success: false,
+        message: "Error summarizing chapter.",
+      };
+    }
 
-    // update the global context and integrate the currentChapterSummary
-    // const globalContextUpdated =
-    //   await this.instanceRequestManager.manageGlobalContext(
-    //     this.instanceSharedContext,
-    //   );
-    // this.instanceSharedContext.updateGlobalContext(globalContextUpdated);
+    let globalContextUpdated;
+    try {
+      // update the global context and integrate the currentChapterSummary
+      globalContextUpdated =
+        await this.instanceRequestManager.manageGlobalContext(
+          instanceSharedContext,
+          currentChapterSummary,
+        );
+    } catch (e: any) {
+      console.error("processChunk en erreur - ", e.message);
+      return {
+        success: false,
+        message: "Error creating global story snapshot.",
+      };
+    }
+
+    let glossaryContextUpdated: CharacterGlossaryDB[] = [];
+    try {
+      glossaryContextUpdated =
+        await this.instanceRequestManager.updateCharactersGlossary(
+          instanceSharedContext,
+          currentChapterSummary,
+        );
+    } catch (e: any) {
+      console.error("processChunk en erreur - ", e.message);
+      return {
+        success: false,
+        message: "Error updating glossary.",
+      };
+    }
+    console.log("glossary updated :");
+    console.log(glossaryContextUpdated);
+
+    await this.instanceChaptersRepo.saveChapterContext(
+      hydratedBookmark.book.id,
+      chapterNumber,
+      currentChapterSummary,
+      glossaryContextUpdated,
+      globalContextUpdated,
+    );
 
     console.log("done");
     // return the processed chapter
@@ -155,9 +217,7 @@ export class generativeTextOrchestrator {
       success: true,
       data: {
         title: sourceObject.data.title || "",
-        chapter: this.instanceSharedContext.getCurrentChapterText() || "",
-        lastChapterSummary:
-          this.instanceSharedContext.getLastChapterSummary() || "",
+        chapter: instanceSharedContext.getCurrentChapterText() || "",
       },
     };
   }
