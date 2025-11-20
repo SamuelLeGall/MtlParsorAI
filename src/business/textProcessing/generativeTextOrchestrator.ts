@@ -11,6 +11,16 @@ export class generativeTextOrchestrator {
   private tokenToCharacters(token: number): number {
     return 4 * token;
   }
+
+  /**
+   * Give an estimation of how many characters are in X sentences. Approximation done for english language.
+   * Average sentences between 15 and 20 words.
+   * 1 word ≈ 5.3 characters (on basis that 1 token ≈ 0.75 word && 1 token ≈ 4 characters)
+   */
+  private sentencesToCharacters(nbSentences: number): number {
+    return nbSentences * 20 * 5.3;
+  }
+
   /**
    * Chunking and token budgeting for chapter translation
    * ----------------------------------------------------
@@ -50,7 +60,7 @@ export class generativeTextOrchestrator {
    */
 
   private maxChunkSize = this.tokenToCharacters(15_000);
-  private overlapSize = 4; // Number of overlapping sentences
+  private overlapSize = this.sentencesToCharacters(4); // Number of overlapping characters
   private currentChapterSummaryMaxSize = 800; // Number of tokens for chapter summary
   private globalContextSummaryMaxSize = 2500; // Number of tokens for summary of the whole story
   private maxSentenceLength = 250; // 250 characters max per sentence
