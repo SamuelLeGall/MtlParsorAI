@@ -1,69 +1,97 @@
-import { sharedContext } from "../../models/contexte";
+import { ChaptersRepository } from "../chapters/ChaptersRepository";
+import { CharacterGlossaryDB } from "../../models/chapter";
 
-const currentGlobalContext = `In a harsh, post-apocalyptic world, Gu Hang rises to power as the new governor of a planet ravaged by monsters and energy storms. The previous governors faced grim fates, executed for their inability to meet the council’s tax demands within two years. Despite the council’s political maneuvering, Gu Hang takes bold steps to establish control, moving his camp outside the city, which is largely disregarded by the council.
-With the support of a cruiser in orbit acting as a nuclear deterrent, he strategically eliminates multiple bandit groups and faces cultist threats as he pressures the council to act against them. Recently, Gu Hang successfully regained control of the city from a rogue general, initiating a purge of corrupt officials to replace them with loyal allies. He receives assistance from the Sisters of Battle, dedicated to eradicating cultist influence, and commands a squad of seven space marines from a nearly extinct chapter, recently freed from a century-long punishment for heresy.`;
-
+/**
+ * This class is used to store data that can be used everywhere for the chpater that is being processed. Warning, it is a new instance for each call.
+ */
 export class sharedContextManager {
-  private sharedContext: sharedContext = {
-    lastChapterSummary: null,
-    currentChapterSummary: null,
-    globalContext: currentGlobalContext,
-    currentChapterText: null,
-  };
+  private readonly chapterNumber: number;
+  private readonly bookID: string;
+  private currentChapterText: string[] = [];
+  private readonly instanceChaptersRepository: ChaptersRepository;
 
-  private getSharedContext(): sharedContext {
-    return this.sharedContext;
+  constructor(
+    chapterNumberParam: number,
+    bookIDParam: string,
+    chaptersRepo = new ChaptersRepository(),
+  ) {
+    this.chapterNumber = chapterNumberParam;
+    this.bookID = bookIDParam;
+    this.instanceChaptersRepository = chaptersRepo;
   }
 
-  getLastChapterSummary(): string | null {
-    return this.getSharedContext().lastChapterSummary;
+  private async getChapterSummary(
+    chapterNumberParam: number,
+  ): Promise<string | null> {
+    return this.instanceChaptersRepository.getChapterSummary(
+      this.bookID,
+      chapterNumberParam,
+    );
+  }
+  private async getStorySnapshot(
+    chapterNumberParam: number,
+  ): Promise<string | null> {
+    return this.instanceChaptersRepository.getChapterStorySnapshot(
+      this.bookID,
+      chapterNumberParam,
+    );
   }
 
-  getCurrentChapterSummary(): string | null {
-    return this.getSharedContext().currentChapterSummary;
-  }
-
-  getCurrentChapterText(): string | null {
-    const currentChapterText = this.getSharedContext().currentChapterText;
-    if (!currentChapterText) {
+  public async getLastChapterSummary(): Promise<string | null> {
+    if (this.chapterNumber <= 1) {
       return null;
     }
-    return currentChapterText.trim();
+    return this.getChapterSummary(this.chapterNumber - 1);
   }
 
-  getGlobalContext(): string | null {
-    return this.getSharedContext().globalContext;
-  }
-  setLastChapterSummary(value: string | null): void {
-    this.sharedContext.lastChapterSummary = value;
-  }
-
-  setCurrentChapterSummary(value: string | null): void {
-    this.sharedContext.currentChapterSummary = value;
-  }
-  private resetCurrentChapterSummary(): void {
-    this.setCurrentChapterSummary(null);
+  public async getStorySnapshotBeforeChapter(): Promise<string | null> {
+    if (this.chapterNumber <= 1) {
+      return null;
+    }
+    return this.getStorySnapshot(this.chapterNumber - 1);
   }
 
-  updateSummaries() {
-    const currentChapterSummary = this.getCurrentChapterSummary();
-    if (!currentChapterSummary) {
-      return;
+  public async getLastChapterGlossary(
+    relevanceRequirements = 0.25, // update getChapterGlossary from instanceChaptersRepository as well
+  ): Promise<CharacterGlossaryDB[] | null> {
+    if (this.chapterNumber <= 1) {
+      return null;
+    }
+    return this.instanceChaptersRepository.getChapterGlossary(
+      this.bookID,
+      this.chapterNumber - 1,
+      relevanceRequirements,
+    );
+  }
+
+  public getCurrentChapterText(): string | null {
+    const currentChapterText = this.currentChapterText;
+    if (currentChapterText.length === 0) {
+      return null;
+    }
+    return currentChapterText
+      .reduce((accumulator, currentValue) => {
+        return accumulator + currentValue;
+      }, "")
+      .trim();
+  }
+
+  public getCurrentChapterChunks(nbChunks: number): string | null {
+    if (this.currentChapterText.length === 0) {
+      return null;
     }
 
-    this.setLastChapterSummary(currentChapterSummary);
-    this.resetCurrentChapterSummary();
+    const chaptersChunks = this.currentChapterText.slice(-nbChunks);
+    return chaptersChunks
+      .reduce((accumulator, currentValue) => {
+        return accumulator + currentValue;
+      }, "")
+      .trim();
   }
+
+  /** SETTERS */
 
   addToCurrentChapterText(newChunckText: string): void {
-    if (this.sharedContext.currentChapterText) {
-      this.sharedContext.currentChapterText += newChunckText;
-    } else {
-      this.sharedContext.currentChapterText = newChunckText;
-    }
-  }
-
-  updateGlobalContext(globalContextUpdated: string): void {
-    this.sharedContext.globalContext = globalContextUpdated;
+    this.currentChapterText.push(newChunckText);
   }
 }

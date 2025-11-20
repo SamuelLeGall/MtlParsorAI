@@ -1,5 +1,5 @@
 import { RedisClient } from "../../infrastructure/database/redisClient";
-import { ChapterDB } from "../../models/chapter";
+import { ChapterDB, CharacterGlossaryDB } from "../../models/chapter";
 import { generativeTextOrchestrator } from "../textProcessing/generativeTextOrchestrator";
 import { sourceWebsiteManager } from "../sourcesWebsites/sourceWebsiteManager";
 import crypto from "node:crypto";
@@ -54,6 +54,61 @@ export class ChaptersRepository {
     } finally {
       await this.chaptersDB.deleteChapterLock(bookID, chapterNumber);
     }
+  }
+
+  /**
+   * Fetch a single chapter summary
+   */
+  public async getChapterSummary(
+    bookID: string,
+    chapterNumber: number,
+  ): Promise<string | null> {
+    const ctx = await this.chaptersDB.getChapterContext(bookID, chapterNumber);
+    if (!ctx) {
+      return null;
+    }
+
+    return ctx.summary;
+  }
+
+  /**
+   * Fetch the global Story context snapshot during for one chapter
+   */
+  public async getChapterStorySnapshot(
+    bookID: string,
+    chapterNumber: number,
+  ): Promise<string | null> {
+    const ctx = await this.chaptersDB.getChapterContext(bookID, chapterNumber);
+    if (!ctx) {
+      return null;
+    }
+
+    return ctx.globalStory;
+  }
+
+  /**
+   * Fetch a single chapter glossary
+   */
+  public async getChapterGlossary(
+    bookID: string,
+    chapterNumber: number,
+    relevanceRequirements = 0.25, // update getLastChapterGlossary from sharedContextManager as well
+  ): Promise<CharacterGlossaryDB[] | null> {
+    const ctx = await this.chaptersDB.getChapterContext(bookID, chapterNumber);
+    if (!ctx) {
+      return null;
+    }
+
+    return ctx.glossary.filter((character) => {
+      const score = Number.parseInt(String(character.relevance));
+      if (Number.isNaN(score)) {
+        console.warn(
+          `invalid relevance number for id : ${character.id} - score ${character.relevance}`,
+        );
+        return true;
+      }
+      return score >= relevanceRequirements;
+    });
   }
 
   /**
@@ -162,6 +217,25 @@ export class ChaptersRepository {
       title: dataChapter.data.title,
       body: dataChapter.data.chapter,
     };
+  }
+
+  /**
+   * Update a chapter context
+   */
+  public async saveChapterContext(
+    bookID: string,
+    chapterNumber: number,
+    summary: string,
+    glossary: CharacterGlossaryDB[],
+    globalStory: string,
+  ): Promise<void> {
+    const id = crypto.randomUUID();
+    await this.chaptersDB.saveChapterContext(bookID, chapterNumber, {
+      id,
+      summary,
+      glossary,
+      globalStory,
+    });
   }
 
   /**

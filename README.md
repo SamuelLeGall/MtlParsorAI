@@ -23,6 +23,7 @@ refer to the following documentation for detail in [this guide](./SERVER_INSTALL
 ------------------------
 ## NEXT steps
 
+- refactor the chunk parsor and make overlaps work again
 - Better error handling + work with the errorAI/detail from generateChapter and up
 - Make it so that the first 5 chapters of any books have no expiration date on redis
 - See we can detect when the browser use auto-translate on the website to alert the user careful you loose the point of the website...

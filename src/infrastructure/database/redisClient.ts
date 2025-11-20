@@ -1,7 +1,7 @@
 import { createClient, RedisClientType } from "redis";
 import { UserDB } from "../../models/users";
 import { BookDB, BookmarkDB } from "../../models/bookmark";
-import { ChapterDB } from "../../models/chapter";
+import { ChapterContextDB, ChapterDB } from "../../models/chapter";
 
 export class RedisClient {
   private static instance: RedisClient;
@@ -286,6 +286,10 @@ class RedisChaptersStore {
     return `${this.chapterKey(bookID, chapterNumber)}:lock`;
   }
 
+  private chapterContext(bookID: string, chapterNumber: number): string {
+    return `${this.chapterKey(bookID, chapterNumber)}:context`;
+  }
+
   /** Create or update a chapter entry */
   public async saveChapter(
     bookID: string,
@@ -296,6 +300,25 @@ class RedisChaptersStore {
     await this.redis.set(
       this.chapterKey(bookID, chapterNumber),
       JSON.stringify(chapter),
+      {
+        expiration: {
+          type: "EX",
+          value: exp,
+        },
+      },
+    );
+  }
+
+  /** Create or update the context from a chapter entry */
+  public async saveChapterContext(
+    bookID: string,
+    chapterNumber: number,
+    ctx: ChapterContextDB,
+    exp = 60 * 60 * 24 * 30, // 30 days
+  ): Promise<void> {
+    await this.redis.set(
+      this.chapterContext(bookID, chapterNumber),
+      JSON.stringify(ctx),
       {
         expiration: {
           type: "EX",
@@ -335,6 +358,17 @@ class RedisChaptersStore {
   ): Promise<ChapterDB | null> {
     const data = await this.redis.get(this.chapterKey(bookID, chapterNumber));
     return data ? (JSON.parse(data) as ChapterDB) : null;
+  }
+
+  /** Fetch one chapter context by bookID and chapter number */
+  public async getChapterContext(
+    bookID: string,
+    chapterNumber: number,
+  ): Promise<ChapterContextDB | null> {
+    const data = await this.redis.get(
+      this.chapterContext(bookID, chapterNumber),
+    );
+    return data ? (JSON.parse(data) as ChapterContextDB) : null;
   }
 
   /** Delete one chapter by bookID and chapter number*/
